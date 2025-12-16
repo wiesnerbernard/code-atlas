@@ -126,27 +126,64 @@ function searchFunctions(
  */
 function displayTable(results: SearchResult[]): void {
   const table = new Table({
-    head: ['Name', 'File', 'Line', 'Params', 'Description'],
-    colWidths: [25, 35, 6, 30, 40],
+    head: ['Function', 'Location', 'Signature', 'Description'],
+    colWidths: [30, 50, 50, 50],
     wordWrap: true,
   });
 
   for (const result of results) {
     const { metadata } = result;
-    const params = metadata.params.map((p) => `${p.name}: ${p.type}`).join(', ');
-    const desc = metadata.jsdoc?.substring(0, 60) ?? '';
+    
+    // Simplify file path - show relative to cwd
+    const relativePath = metadata.filePath.replace(process.cwd(), '.');
+    const location = `${relativePath}:${metadata.line}`;
+    
+    // Simplify types - remove long import paths
+    const params = metadata.params
+      .map((p) => {
+        const simpleType = simplifyType(p.type);
+        return `${p.name}: ${simpleType}`;
+      })
+      .join(', ');
+    
+    const signature = `${metadata.name}(${params})`;
+    const returnType = simplifyType(metadata.returnType);
+    const fullSignature = params.length > 40 
+      ? `${metadata.name}(...)\n→ ${returnType}`
+      : `${signature}\n→ ${returnType}`;
+    
+    const desc = metadata.jsdoc || chalk.dim('No description');
 
     table.push([
-      chalk.blue(metadata.name),
-      metadata.filePath,
-      metadata.line.toString(),
-      params,
+      chalk.blue.bold(metadata.name),
+      chalk.dim(location),
+      fullSignature,
       desc,
     ]);
   }
 
   console.log(table.toString());
-  logger.info(`\nFound ${results.length} results`);
+  console.log(chalk.dim(`\n${results.length} result${results.length === 1 ? '' : 's'} found`));
+}
+
+/**
+ * Simplifies complex TypeScript types for display
+ */
+function simplifyType(type: string): string {
+  // Remove import paths
+  type = type.replace(/import\([^)]+\)\./g, '');
+  
+  // Shorten common patterns
+  type = type.replace(/Promise<(.+)>/g, '$1');
+  type = type.replace(/Array</g, '');
+  type = type.replace(/>$/g, '[]');
+  
+  // Truncate if still too long
+  if (type.length > 50) {
+    return type.substring(0, 47) + '...';
+  }
+  
+  return type;
 }
 
 /**

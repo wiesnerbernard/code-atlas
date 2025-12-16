@@ -1,0 +1,259 @@
+{
+  "version": "0.1.0",
+  "generatedAt": "2025-12-16T18:05:09.865Z",
+  "scannedPaths": [
+    "./src"
+  ],
+  "totalFiles": 11,
+  "totalFunctions": 13,
+  "functions": [
+    {
+      "name": "crawl",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/crawler.ts",
+      "line": 50,
+      "params": [
+        {
+          "name": "rootPaths",
+          "type": "string[]",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "{ ignore?: string[]; includeTests?: boolean; }",
+          "optional": true
+        }
+      ],
+      "returnType": "Promise<import(\"/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/types/index\").CrawlResult>",
+      "jsdoc": "Crawls the file system to find source files for analysis",
+      "isExported": true,
+      "complexity": 5,
+      "astHash": "c797adc81ec4c8923e0bcbb17daf027822d70c7be1b59ece5e16d23f48b76af2"
+    },
+    {
+      "name": "validatePaths",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/crawler.ts",
+      "line": 105,
+      "params": [
+        {
+          "name": "paths",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "returnType": "string[]",
+      "jsdoc": "Validates that all root paths exist and are accessible",
+      "isExported": true,
+      "complexity": 1,
+      "astHash": "1361c49549f4e2bcbadcd6ca0ad28a39635028eec69f82d7a803b174d87df08d"
+    },
+    {
+      "name": "extractMetadata",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/extractor.ts",
+      "line": 26,
+      "params": [
+        {
+          "name": "sourceFile",
+          "type": "import(\"/Users/bernardwiesner/Documents/dev/personal/code-atlas/node_modules/ts-morph/lib/ts-morph\").SourceFile",
+          "optional": false
+        }
+      ],
+      "returnType": "import(\"/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/types/index\").FunctionMetadata[]",
+      "jsdoc": "Extracts metadata from all exported functions in a source file",
+      "isExported": true,
+      "complexity": 6,
+      "astHash": "ed6583927ea38840041ff392f7288bb7b534f37970504afd7032848dcca33a89"
+    },
+    {
+      "name": "parseFile",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/parser.ts",
+      "line": 52,
+      "params": [
+        {
+          "name": "filePath",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "returnType": "Promise<import(\"/Users/bernardwiesner/Documents/dev/personal/code-atlas/node_modules/ts-morph/lib/ts-morph\").SourceFile>",
+      "jsdoc": "Parses a single file and returns its SourceFile representation\n\nGracefully handles parse errors by logging a warning and returning null.",
+      "isExported": true,
+      "complexity": 3,
+      "astHash": "17cf5a5c8885cc7c80d43648f0555af568c1d9edcac2bce159cba9fd822f05d5"
+    },
+    {
+      "name": "parseFiles",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/parser.ts",
+      "line": 80,
+      "params": [
+        {
+          "name": "filePaths",
+          "type": "string[]",
+          "optional": false
+        },
+        {
+          "name": "batchSize",
+          "type": "number",
+          "optional": true,
+          "defaultValue": "50"
+        }
+      ],
+      "returnType": "Promise<import(\"/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/types/index\").ParseResult[]>",
+      "jsdoc": "Parses multiple files in parallel\n\nProcesses files in batches to avoid overwhelming the system.",
+      "isExported": true,
+      "complexity": 4,
+      "astHash": "8ab04690a20136bcf8b903d794324790211ac9c4096fe5c1bd7d8f92199731e6"
+    },
+    {
+      "name": "resetProject",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/parser.ts",
+      "line": 128,
+      "params": [],
+      "returnType": "void",
+      "jsdoc": "Resets the project instance (useful for testing)",
+      "isExported": true,
+      "complexity": 1,
+      "astHash": "ec1a461fc43c4c59b0fbed560edc9d49844702a484100c04874b880c98b0dc1f"
+    },
+    {
+      "name": "createRegistry",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/registry.ts",
+      "line": 30,
+      "params": [
+        {
+          "name": "functions",
+          "type": "import(\"/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/types/index\").FunctionMetadata[]",
+          "optional": false
+        },
+        {
+          "name": "scannedPaths",
+          "type": "string[]",
+          "optional": false
+        },
+        {
+          "name": "totalFiles",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "returnType": "import(\"/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/types/index\").Registry",
+      "jsdoc": "Creates a new registry from function metadata",
+      "isExported": true,
+      "complexity": 1,
+      "astHash": "ccf978b3de572020e91d197cf873c84a903f186499c4bbe7b669024ceb37edf9"
+    },
+    {
+      "name": "saveRegistry",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/registry.ts",
+      "line": 59,
+      "params": [
+        {
+          "name": "registry",
+          "type": "import(\"/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/types/index\").Registry",
+          "optional": false
+        },
+        {
+          "name": "outputPath",
+          "type": "string",
+          "optional": true,
+          "defaultValue": "DEFAULT_REGISTRY_PATH"
+        }
+      ],
+      "returnType": "Promise<void>",
+      "jsdoc": "Saves a registry to disk",
+      "isExported": true,
+      "complexity": 4,
+      "astHash": "7d5774b083106b77ede8e30d21016d3b28b67be9adcd4a654b01957a2d46875b"
+    },
+    {
+      "name": "loadRegistry",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/registry.ts",
+      "line": 93,
+      "params": [
+        {
+          "name": "inputPath",
+          "type": "string",
+          "optional": true,
+          "defaultValue": "DEFAULT_REGISTRY_PATH"
+        }
+      ],
+      "returnType": "Promise<import(\"/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/types/index\").Registry>",
+      "jsdoc": "Loads a registry from disk",
+      "isExported": true,
+      "complexity": 4,
+      "astHash": "ab084aa6e4c3098ca15762045e36aeb60450d16ccd4f7e9fdb2cb6fd91b9e611"
+    },
+    {
+      "name": "getRegistryPath",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/registry.ts",
+      "line": 158,
+      "params": [
+        {
+          "name": "projectRoot",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "returnType": "string",
+      "jsdoc": "Gets the default registry path for a project",
+      "isExported": true,
+      "complexity": 1,
+      "astHash": "92b0c68b005ab735d527b400f3f7b027bbec02d5a8ac80372da66cd2cffdc603"
+    },
+    {
+      "name": "scanCommand",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/commands/scan.ts",
+      "line": 29,
+      "params": [
+        {
+          "name": "paths",
+          "type": "string[]",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "import(\"/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/types/index\").ScanOptions",
+          "optional": false
+        }
+      ],
+      "returnType": "Promise<void>",
+      "jsdoc": "Executes the scan command\n\nCrawls the specified paths, parses files, extracts metadata,\nand builds a registry.",
+      "isExported": true,
+      "complexity": 9,
+      "astHash": "d5a2e590d98572e3b5598ee959caf08c23d35dc9bdeb3fcf2486ce30c9d8b096"
+    },
+    {
+      "name": "searchCommand",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/commands/search.ts",
+      "line": 28,
+      "params": [
+        {
+          "name": "query",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "import(\"/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/types/index\").SearchOptions",
+          "optional": false
+        }
+      ],
+      "returnType": "Promise<void>",
+      "jsdoc": "Executes the search command\n\nSearches the registry for functions matching the query.",
+      "isExported": true,
+      "complexity": 8,
+      "astHash": "f4c105966b18114613d7eab1f1c0361d8461fdc5ff365a73bb3482cd193222c6"
+    },
+    {
+      "name": "statsCommand",
+      "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/commands/stats.ts",
+      "line": 20,
+      "params": [],
+      "returnType": "Promise<void>",
+      "jsdoc": "Executes the stats command\n\nDisplays statistics about the current registry.",
+      "isExported": true,
+      "complexity": 11,
+      "astHash": "f0d0d5da183c8053d5448a46b93b4974aac0df1cc47733f45c785bc58627d80c"
+    }
+  ],
+  "duplicates": []
+}
