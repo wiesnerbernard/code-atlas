@@ -10,6 +10,8 @@ import { Command } from 'commander';
 import { scanCommand } from './commands/scan.js';
 import { searchCommand } from './commands/search.js';
 import { statsCommand } from './commands/stats.js';
+import { watchCommand } from './commands/watch.js';
+import { reportCommand } from './commands/report.js';
 import { DEFAULT_REGISTRY_PATH } from './core/registry.js';
 import { logger } from './utils/logger.js';
 
@@ -73,6 +75,43 @@ program
       await statsCommand();
     } catch (error) {
       logger.error('Stats command failed');
+      process.exit(1);
+    }
+  });
+
+// Report command
+program
+  .command('report')
+  .description('Generate interactive HTML report')
+  .option('-o, --output <path>', 'Output HTML file path', './code-atlas-report.html')
+  .action(async (options) => {
+    try {
+      await reportCommand({ output: options.output });
+    } catch (error) {
+      logger.error('Report command failed');
+      process.exit(1);
+    }
+  });
+
+// Watch command
+program
+  .command('watch')
+  .description('Watch for file changes and update registry automatically')
+  .argument('[paths...]', 'Directories to watch', ['./src'])
+  .option('-i, --ignore <patterns...>', 'Glob patterns to ignore')
+  .option('-o, --output <path>', 'Output registry file path', DEFAULT_REGISTRY_PATH)
+  .option('--include-tests', 'Include test files in scan', false)
+  .option('--max-complexity <number>', 'Maximum cyclomatic complexity threshold', parseInt)
+  .action(async (paths: string[], options) => {
+    try {
+      await watchCommand(paths, {
+        ignore: options.ignore,
+        output: options.output,
+        includeTests: options.includeTests,
+        maxComplexity: options.maxComplexity,
+      });
+    } catch (error) {
+      logger.error('Watch command failed');
       process.exit(1);
     }
   });

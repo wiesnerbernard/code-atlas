@@ -6,6 +6,7 @@
  */
 
 import { Project, type SourceFile } from 'ts-morph';
+import cliProgress from 'cli-progress';
 import type { ParseResult } from '../types/index.js';
 import { logger } from '../utils/logger.js';
 
@@ -85,6 +86,16 @@ export async function parseFiles(
   
   logger.info(`Parsing ${filePaths.length} files...`);
 
+  // Create progress bar
+  const progressBar = new cliProgress.SingleBar({
+    format: 'Progress |{bar}| {percentage}% | {value}/{total} files',
+    barCompleteChar: '\u2588',
+    barIncompleteChar: '\u2591',
+    hideCursor: true,
+  });
+
+  progressBar.start(filePaths.length, 0);
+
   for (let i = 0; i < filePaths.length; i += batchSize) {
     const batch = filePaths.slice(i, i + batchSize);
     const batchResults = await Promise.all(
@@ -109,10 +120,11 @@ export async function parseFiles(
 
     results.push(...batchResults);
 
-    // Progress update
-    const progress = Math.min(i + batchSize, filePaths.length);
-    logger.debug(`Progress: ${progress}/${filePaths.length} files parsed`);
+    // Update progress bar
+    progressBar.update(Math.min(i + batchSize, filePaths.length));
   }
+
+  progressBar.stop();
 
   const errorCount = results.filter((r) => r.error).length;
   if (errorCount > 0) {

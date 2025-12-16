@@ -21,6 +21,8 @@ export {
 export { scanCommand } from './commands/scan.js';
 export { searchCommand } from './commands/search.js';
 export { statsCommand } from './commands/stats.js';
+export { watchCommand } from './commands/watch.js';
+export { reportCommand } from './commands/report.js';
 
 // Types
 export type {

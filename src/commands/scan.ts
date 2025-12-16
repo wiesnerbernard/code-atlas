@@ -7,6 +7,7 @@ import { crawl } from '../core/crawler.js';
 import { parseFile } from '../core/parser.js';
 import { extractMetadata } from '../core/extractor.js';
 import { createRegistry, saveRegistry } from '../core/registry.js';
+import { loadConfig, mergeConfig, getPathsFromConfig } from '../utils/config.js';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -26,12 +27,26 @@ import { logger } from '../utils/logger.js';
  * });
  * ```
  */
-export async function scanCommand(paths: string[], options: ScanOptions): Promise<void> {
+export async function scanCommand(
+  cliPaths: string[],
+  cliOptions: ScanOptions
+): Promise<void> {
   const startTime = Date.now();
 
-  logger.info(`Starting scan of: ${paths.join(', ')}`);
-
   try {
+    // Load config file
+    const config = await loadConfig();
+    
+    // Merge config with CLI options (CLI takes precedence)
+    const options = mergeConfig(config, cliOptions);
+    const paths = getPathsFromConfig(config, cliPaths);
+
+    logger.info(`Starting scan of: ${paths.join(', ')}`);
+
+    if (config) {
+      logger.debug('Using configuration file');
+    }
+
     // Step 1: Crawl file system
     const crawlResult = await crawl(paths, {
       ignore: options.ignore,
