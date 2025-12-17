@@ -78,6 +78,13 @@ export interface Registry {
   
   /** Detected duplicate function groups */
   duplicates: DuplicateGroup[];
+  
+  /** Dependency graph data (optional) */
+  dependencies?: {
+    orphanCount: number;
+    circularCount: number;
+    avgDependencies: number;
+  };
 }
 
 /**
