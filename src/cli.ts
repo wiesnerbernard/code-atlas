@@ -30,6 +30,7 @@ program
   .option('-i, --ignore <patterns...>', 'Glob patterns to ignore')
   .option('-o, --output <path>', 'Output registry file path', DEFAULT_REGISTRY_PATH)
   .option('--include-tests', 'Include test files in scan', false)
+  .option('--include-git', 'Include Git metadata (author, dates, churn)', false)
   .option('--max-complexity <number>', 'Maximum cyclomatic complexity threshold', parseInt)
   .action(async (paths: string[], options) => {
     try {
@@ -37,6 +38,7 @@ program
         ignore: options.ignore,
         output: options.output,
         includeTests: options.includeTests,
+        includeGit: options.includeGit,
         maxComplexity: options.maxComplexity,
       });
     } catch (error) {

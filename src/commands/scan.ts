@@ -9,6 +9,7 @@ import { extractMetadata } from '../core/extractor.js';
 import { createRegistry, saveRegistry } from '../core/registry.js';
 import { loadConfig, mergeConfig, getPathsFromConfig } from '../utils/config.js';
 import { logger } from '../utils/logger.js';
+import { enrichWithGitMetadata } from '../core/git.js';
 
 /**
  * Executes the scan command
@@ -80,8 +81,16 @@ export async function scanCommand(
       logger.info(`Filtered ${filtered} functions exceeding complexity threshold`);
     }
 
+    // Enrich with Git metadata if requested
+    let finalMetadata = filteredMetadata;
+    if (options.includeGit) {
+      logger.info('Enriching with Git metadata...');
+      finalMetadata = await enrichWithGitMetadata(filteredMetadata, process.cwd());
+      logger.info('Git metadata enrichment complete');
+    }
+
     // Step 3: Build and save registry
-    const registry = createRegistry(filteredMetadata, paths, crawlResult.files.length);
+    const registry = createRegistry(finalMetadata, paths, crawlResult.files.length);
 
     await saveRegistry(registry, options.output);
 
