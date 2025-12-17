@@ -4,8 +4,7 @@
 
 import type { ScanOptions } from '../types/index.js';
 import { crawl } from '../core/crawler.js';
-import { parseFile } from '../core/parser.js';
-import { extractMetadata } from '../core/extractor.js';
+import { parseFiles } from '../core/parser.js';
 import { createRegistry, saveRegistry } from '../core/registry.js';
 import { loadConfig, mergeConfig, getPathsFromConfig } from '../utils/config.js';
 import { logger } from '../utils/logger.js';
@@ -58,17 +57,10 @@ export async function scanCommand(
       return;
     }
 
-    // Step 2: Parse files and extract metadata
-    logger.info('Parsing files and extracting metadata...');
-    const allMetadata = [];
-
-    for (const filePath of crawlResult.files) {
-      const sourceFile = await parseFile(filePath);
-      if (sourceFile) {
-        const metadata = extractMetadata(sourceFile);
-        allMetadata.push(...metadata);
-      }
-    }
+    // Step 2: Parse files and extract metadata (with caching and parallel processing)
+    const parseResults = await parseFiles(crawlResult.files, !options.noCache);
+    
+    const allMetadata = parseResults.flatMap(result => result.metadata);
 
     // Filter by complexity if specified
     const filteredMetadata = options.maxComplexity

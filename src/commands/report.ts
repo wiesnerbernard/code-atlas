@@ -55,7 +55,15 @@ export async function reportCommand(options: ReportOptions): Promise<void> {
  * Generates HTML report content
  */
 function generateHTML(registry: any): string {
-  const functionsJSON = JSON.stringify(registry.functions, null, 2);
+  const cwd = process.cwd() + '/';
+  
+  // Replace absolute paths with relative paths
+  const functionsWithRelativePaths = registry.functions.map((func: any) => ({
+    ...func,
+    filePath: func.filePath.startsWith(cwd) ? './' + func.filePath.slice(cwd.length) : func.filePath
+  }));
+  
+  const functionsJSON = JSON.stringify(functionsWithRelativePaths, null, 2);
   const duplicatesJSON = JSON.stringify(registry.duplicates, null, 2);
 
   return `<!DOCTYPE html>
@@ -332,7 +340,7 @@ function generateHTML(registry: any): string {
                         <div class="function-name">\${func.name}</div>
                         <div class="function-signature">\${signature}</div>
                         <div class="function-meta">
-                            <div class="meta-item">📁 \${func.filePath.replace(process.cwd(), '.')}:\${func.line}</div>
+                            <div class="meta-item">📁 \${func.filePath}:\${func.line}</div>
                             <div class="meta-item">\${getComplexityBadge(func.complexity)} Complexity: \${func.complexity}</div>
                         </div>
                         \${func.jsdoc ? \`<div class="function-description">\${func.jsdoc}</div>\` : ''}
