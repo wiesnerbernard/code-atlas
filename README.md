@@ -20,6 +20,19 @@ Code-Atlas automatically:
 3. **Extracts** metadata (function signatures, JSDoc, parameters, return types)
 4. **Indexes** everything into a searchable local registry
 5. **Discovers** duplicate logic using AST-based hashing
+6. **Visualizes** dependencies and identifies code quality issues
+7. **Tracks** code history with Git integration
+
+## ✨ Features
+
+- 🔍 **Smart Search** - Fuzzy finding with interactive or JSON output
+- 📊 **Stats & Analytics** - Complexity analysis and duplicate detection
+- 📈 **Dependency Graphs** - Visualize function relationships (Mermaid, DOT, JSON)
+- 📤 **Multi-Format Export** - JSON, CSV, and Markdown for CI/CD and documentation
+- 🔥 **Git Integration** - Track authors, churn metrics, and identify hot spots
+- 📝 **HTML Reports** - Interactive visual function maps
+- ⚡ **Watch Mode** - Auto-update registry on file changes
+- 🎯 **Dead Code Detection** - Find orphaned and unused functions
 
 ## Installation
 
@@ -48,8 +61,62 @@ code-atlas scan ./src
 
 Options:
 ```bash
+# Ignore patterns and set output path
 code-atlas scan ./src --ignore "**/*.test.ts" --output .code-atlas/registry.json
+
+# Include test files
+code-atlas scan ./src --include-tests
+
+# Filter by complexity threshold
+code-atlas scan ./src --max-complexity 10
+
+# Include Git metadata (author, dates, churn)
+code-atlas scan ./src --include-git
+
+# Disable cache for fresh parse
+code-atlas scan ./src --no-cache
 ```
+
+### Export Registry
+Export your function registry in multiple formats:
+
+```bash
+# Export to JSON (default)
+code-atlas export
+
+# Export to CSV for spreadsheet analysis
+code-atlas export --format csv --output functions.csv
+
+# Export to Markdown with duplicates
+code-atlas export --format markdown --include-duplicates --output FUNCTIONS.md
+```
+
+**Export formats:**
+- **JSON**: Full registry for CI/CD pipelines
+- **CSV**: Spreadsheet-friendly with proper escaping
+- **Markdown**: GitHub-flavored with tables and statistics
+
+### Visualize Dependencies
+Generate dependency graphs to understand code structure:
+
+```bash
+# Generate Mermaid diagram (works in GitHub markdown)
+code-atlas graph --format mermaid --output deps.md
+
+# Generate DOT graph for GraphViz
+code-atlas graph --format dot --output deps.dot
+
+# JSON with orphan and circular dependency details
+code-atlas graph --format json --show-orphans --show-circular
+
+# Limit graph size for large codebases
+code-atlas graph --max-nodes 50
+```
+
+The graph command identifies:
+- 🔴 **Orphaned functions** - Never called (potential dead code)
+- 🔄 **Circular dependencies** - Functions that call each other
+- 🎯 **Entry points** - Exported functions with no dependencies
 
 ### Search for Functions
 Find utilities interactively:
@@ -91,8 +158,22 @@ code-atlas stats
 
 Shows:
 - Total functions indexed
-- Most used utilities
+- Complexity distribution (simple, moderate, complex, very complex)
+- Most complex functions
 - Potential duplicates (by AST hash)
+- Git metadata (if scanned with `--include-git`)
+
+### Generate HTML Report
+Create an interactive visual report:
+```bash
+code-atlas report --output report.html
+```
+
+### Watch Mode
+Automatically update registry on file changes:
+```bash
+code-atlas watch ./src
+```
 
 ## Registry Storage
 
@@ -108,24 +189,52 @@ Code-Atlas identifies "utilities" using heuristics:
 - ✅ Helper functions in `utils/`, `helpers/`, `lib/` directories
 - ✅ Functions with JSDoc annotations
 - ❌ React components, classes, and framework-specific code
-- ❌ Test files (`*.test.ts`, `*.spec.ts`)
+- ❌ Test files (`*.test.ts`, `*.spec.ts`) - unless `--include-tests` is used
+
+## Use Cases
+
+### For Developers
+- 🔍 **Discovery**: Find existing utilities before writing duplicates
+- 📊 **Refactoring**: Identify complex functions that need simplification
+- 🔥 **Hot Spots**: Find high-risk code (complex + frequently changing)
+- 🎯 **Dead Code**: Detect orphaned functions that are never called
+
+### For Teams
+- 📈 **Code Review**: Export to Markdown for PR documentation
+- 📉 **Tech Debt**: Track complexity trends over time
+- 🤝 **Onboarding**: Help new developers discover existing utilities
+- 📊 **Metrics**: Export to CSV for team dashboards
+
+### For CI/CD
+- ✅ **Quality Gates**: Fail builds if complexity exceeds thresholds
+- 📤 **Documentation**: Auto-generate function catalogs
+- 🔄 **Change Detection**: Track which utilities changed in each PR
 
 ## Roadmap
 
-### v0.2.0
-- [ ] HTML report generation with visual function map
-- [ ] Duplicate detection based on AST similarity
-- [ ] Support for JavaScript (not just TypeScript)
+### ✅ v0.4.0 (Current)
+- ✅ Export command (JSON, CSV, Markdown)
+- ✅ Dependency graph visualization (Mermaid, DOT, JSON)
+- ✅ Git integration (author, dates, churn metrics, hot spots)
+- ✅ Orphan and circular dependency detection
 
-### v0.3.0
-- [ ] AI-powered function descriptions (using local LLMs)
-- [ ] VS Code extension for inline search
-- [ ] GitHub Action for PR comments ("This PR adds 3 utilities, 2 are duplicates")
+### v0.5.0
+- [ ] VS Code extension for inline function search
+- [ ] Hot spot command with risk scoring
+- [ ] Custom metrics and plugin system
+- [ ] Performance improvements for large codebases
+
+### v0.6.0
+- [ ] Web UI dashboard for interactive browsing
+- [ ] Team collaboration features
+- [ ] API analysis (unused exports, breaking changes)
+- [ ] Integration with documentation generators
 
 ### v1.0.0
 - [ ] Multi-language support (Python, Go, Rust)
 - [ ] Cloud sync for team-wide registries
-- [ ] API for programmatic access
+- [ ] AI-powered function recommendations
+- [ ] GitHub Action for automated PR comments
 
 ## Architecture
 
