@@ -131,6 +131,9 @@ export interface ScanOptions {
   /** Maximum cyclomatic complexity threshold */
   maxComplexity?: number;
   
+  /** Include Git metadata (author, dates, churn) */
+  includeGit?: boolean;
+  
   /** Disable caching for fresh parse */
   noCache?: boolean;
 }
