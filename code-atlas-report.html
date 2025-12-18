@@ -238,7 +238,7 @@
         const functions = [
   {
     "name": "loadConfig",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/utils/config.ts",
+    "filePath": "./src/utils/config.ts",
     "line": 49,
     "params": [
       {
@@ -256,7 +256,7 @@
   },
   {
     "name": "mergeConfig",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/utils/config.ts",
+    "filePath": "./src/utils/config.ts",
     "line": 108,
     "params": [
       {
@@ -278,7 +278,7 @@
   },
   {
     "name": "getPathsFromConfig",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/utils/config.ts",
+    "filePath": "./src/utils/config.ts",
     "line": 131,
     "params": [
       {
@@ -300,7 +300,7 @@
   },
   {
     "name": "reportCommand",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/commands/report.ts",
+    "filePath": "./src/commands/report.ts",
     "line": 28,
     "params": [
       {
@@ -317,7 +317,7 @@
   },
   {
     "name": "scanCommand",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/commands/scan.ts",
+    "filePath": "./src/commands/scan.ts",
     "line": 30,
     "params": [
       {
@@ -339,7 +339,7 @@
   },
   {
     "name": "searchCommand",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/commands/search.ts",
+    "filePath": "./src/commands/search.ts",
     "line": 28,
     "params": [
       {
@@ -361,7 +361,7 @@
   },
   {
     "name": "statsCommand",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/commands/stats.ts",
+    "filePath": "./src/commands/stats.ts",
     "line": 20,
     "params": [],
     "returnType": "Promise<void>",
@@ -372,7 +372,7 @@
   },
   {
     "name": "watchCommand",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/commands/watch.ts",
+    "filePath": "./src/commands/watch.ts",
     "line": 27,
     "params": [
       {
@@ -394,7 +394,7 @@
   },
   {
     "name": "crawl",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/crawler.ts",
+    "filePath": "./src/core/crawler.ts",
     "line": 50,
     "params": [
       {
@@ -416,7 +416,7 @@
   },
   {
     "name": "validatePaths",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/crawler.ts",
+    "filePath": "./src/core/crawler.ts",
     "line": 105,
     "params": [
       {
@@ -433,7 +433,7 @@
   },
   {
     "name": "extractMetadata",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/extractor.ts",
+    "filePath": "./src/core/extractor.ts",
     "line": 26,
     "params": [
       {
@@ -450,7 +450,7 @@
   },
   {
     "name": "parseFile",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/parser.ts",
+    "filePath": "./src/core/parser.ts",
     "line": 53,
     "params": [
       {
@@ -467,7 +467,7 @@
   },
   {
     "name": "parseFiles",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/parser.ts",
+    "filePath": "./src/core/parser.ts",
     "line": 81,
     "params": [
       {
@@ -490,7 +490,7 @@
   },
   {
     "name": "resetProject",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/parser.ts",
+    "filePath": "./src/core/parser.ts",
     "line": 140,
     "params": [],
     "returnType": "void",
@@ -501,7 +501,7 @@
   },
   {
     "name": "createRegistry",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/registry.ts",
+    "filePath": "./src/core/registry.ts",
     "line": 30,
     "params": [
       {
@@ -528,7 +528,7 @@
   },
   {
     "name": "saveRegistry",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/registry.ts",
+    "filePath": "./src/core/registry.ts",
     "line": 59,
     "params": [
       {
@@ -551,7 +551,7 @@
   },
   {
     "name": "loadRegistry",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/registry.ts",
+    "filePath": "./src/core/registry.ts",
     "line": 93,
     "params": [
       {
@@ -569,7 +569,7 @@
   },
   {
     "name": "getRegistryPath",
-    "filePath": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/registry.ts",
+    "filePath": "./src/core/registry.ts",
     "line": 259,
     "params": [
       {
@@ -616,7 +616,7 @@
                         <div class="function-name">${func.name}</div>
                         <div class="function-signature">${signature}</div>
                         <div class="function-meta">
-                            <div class="meta-item">📁 ${func.filePath.replace(process.cwd(), '.')}:${func.line}</div>
+                            <div class="meta-item">📁 ${func.filePath}:${func.line}</div>
                             <div class="meta-item">${getComplexityBadge(func.complexity)} Complexity: ${func.complexity}</div>
                         </div>
                         ${func.jsdoc ? `<div class="function-description">${func.jsdoc}</div>` : ''}

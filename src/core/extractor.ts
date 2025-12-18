@@ -58,7 +58,7 @@ export function extractMetadata(sourceFile: SourceFile): FunctionMetadata[] {
  * @param sourceFile - Parent source file
  * @returns Function metadata or null if extraction fails
  */
-function extractFunctionMetadata(
+export function extractFunctionMetadata(
   func: FunctionDeclaration,
   sourceFile: SourceFile
 ): FunctionMetadata | null {
