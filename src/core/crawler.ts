@@ -1,6 +1,6 @@
 /**
  * File system crawler using fast-glob
- * 
+ *
  * Responsible for discovering source files in the codebase
  * that should be analyzed.
  */
@@ -36,11 +36,11 @@ const DEFAULT_IGNORE = [
 
 /**
  * Crawls the file system to find source files for analysis
- * 
+ *
  * @param rootPaths - Root directories to scan
  * @param options - Crawl options
  * @returns CrawlResult with found files and metadata
- * 
+ *
  * @example
  * ```typescript
  * const result = await crawl(['./src'], { ignore: ['**\/legacy/**'] });
@@ -98,7 +98,7 @@ export async function crawl(
 
 /**
  * Validates that all root paths exist and are accessible
- * 
+ *
  * @param paths - Paths to validate
  * @returns Array of valid paths
  */

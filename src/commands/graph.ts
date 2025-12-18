@@ -7,7 +7,11 @@ import { dirname } from 'path';
 import chalk from 'chalk';
 import { Project } from 'ts-morph';
 import { loadRegistry } from '../core/registry.js';
-import { buildDependencyGraph, generateMermaidDiagram, generateDOTGraph } from '../core/dependencies.js';
+import {
+  buildDependencyGraph,
+  generateMermaidDiagram,
+  generateDOTGraph,
+} from '../core/dependencies.js';
 import { logger } from '../utils/logger.js';
 
 export interface GraphOptions {
@@ -25,11 +29,11 @@ export interface GraphOptions {
 
 /**
  * Executes the graph command
- * 
+ *
  * Analyzes function dependencies and generates visualizations.
- * 
+ *
  * @param options - Graph options
- * 
+ *
  * @example
  * ```typescript
  * await graphCommand({ format: 'mermaid', output: './DEPENDENCIES.md' });
@@ -59,7 +63,7 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
     });
 
     const sourceFiles = new Map();
-    const uniquePaths = new Set(registry.functions.map(f => f.filePath));
+    const uniquePaths = new Set(registry.functions.map((f) => f.filePath));
 
     for (const filePath of uniquePaths) {
       try {
@@ -76,7 +80,7 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
     // Generate output
     const format = options.format || 'mermaid';
     const maxNodes = options.maxNodes || 50;
-    
+
     let content: string;
     let defaultOutput: string;
 
@@ -90,24 +94,28 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
         defaultOutput = './dependencies.dot';
         break;
       case 'json':
-        content = JSON.stringify({
-          orphans: graph.orphans.map(n => ({
-            name: n.function.name,
-            file: n.function.filePath,
-            line: n.function.line,
-          })),
-          circularDependencies: graph.circularDependencies,
-          entryPoints: graph.entryPoints.map(n => ({
-            name: n.function.name,
-            file: n.function.filePath,
-          })),
-          stats: {
-            totalFunctions: graph.nodes.size,
-            orphanedFunctions: graph.orphans.length,
-            circularDependencies: graph.circularDependencies.length,
-            entryPoints: graph.entryPoints.length,
+        content = JSON.stringify(
+          {
+            orphans: graph.orphans.map((n) => ({
+              name: n.function.name,
+              file: n.function.filePath,
+              line: n.function.line,
+            })),
+            circularDependencies: graph.circularDependencies,
+            entryPoints: graph.entryPoints.map((n) => ({
+              name: n.function.name,
+              file: n.function.filePath,
+            })),
+            stats: {
+              totalFunctions: graph.nodes.size,
+              orphanedFunctions: graph.orphans.length,
+              circularDependencies: graph.circularDependencies.length,
+              entryPoints: graph.entryPoints.length,
+            },
           },
-        }, null, 2);
+          null,
+          2
+        );
         defaultOutput = './dependency-graph.json';
         break;
       default:
@@ -124,14 +132,18 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
     logger.success(`Dependency graph generated: ${chalk.blue(outputPath)}`);
     logger.info(`Format: ${format.toUpperCase()}`);
     logger.info(`Functions: ${graph.nodes.size}`);
-    
+
     if (options.showOrphans || graph.orphans.length > 0) {
       logger.warn(`Orphaned functions: ${chalk.red(graph.orphans.length.toString())}`);
-      
+
       if (options.showOrphans && graph.orphans.length > 0) {
         console.log(chalk.yellow('\nOrphaned functions (never called):'));
         for (const orphan of graph.orphans.slice(0, 10)) {
-          console.log(chalk.dim(`  - ${orphan.function.name} (${orphan.function.filePath}:${orphan.function.line})`));
+          console.log(
+            chalk.dim(
+              `  - ${orphan.function.name} (${orphan.function.filePath}:${orphan.function.line})`
+            )
+          );
         }
         if (graph.orphans.length > 10) {
           console.log(chalk.dim(`  ... and ${graph.orphans.length - 10} more`));
@@ -140,8 +152,10 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
     }
 
     if (options.showCircular || graph.circularDependencies.length > 0) {
-      logger.warn(`Circular dependencies: ${chalk.red(graph.circularDependencies.length.toString())}`);
-      
+      logger.warn(
+        `Circular dependencies: ${chalk.red(graph.circularDependencies.length.toString())}`
+      );
+
       if (options.showCircular && graph.circularDependencies.length > 0) {
         console.log(chalk.yellow('\nCircular dependencies detected:'));
         for (const cycle of graph.circularDependencies.slice(0, 5)) {
@@ -154,7 +168,6 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
     }
 
     logger.info(`Entry points: ${graph.entryPoints.length}`);
-
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     logger.error(`Graph generation failed: ${message}`);

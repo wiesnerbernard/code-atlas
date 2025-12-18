@@ -1,6 +1,6 @@
 /**
  * File cache for incremental parsing
- * 
+ *
  * Tracks file modification times to avoid re-parsing unchanged files.
  */
 
@@ -32,15 +32,15 @@ export async function loadCache(): Promise<Cache> {
   try {
     const content = await readFile(CACHE_PATH, 'utf-8');
     const data = JSON.parse(content);
-    
+
     if (data.version !== CACHE_VERSION) {
       return { version: CACHE_VERSION, entries: new Map() };
     }
-    
+
     const entries = new Map<string, CacheEntry>(
       Object.entries(data.entries as Record<string, CacheEntry>)
     );
-    
+
     return { version: CACHE_VERSION, entries };
   } catch {
     return { version: CACHE_VERSION, entries: new Map() };
@@ -53,12 +53,12 @@ export async function loadCache(): Promise<Cache> {
 export async function saveCache(cache: Cache): Promise<void> {
   try {
     await mkdir(dirname(CACHE_PATH), { recursive: true });
-    
+
     const data = {
       version: cache.version,
       entries: Object.fromEntries(cache.entries),
     };
-    
+
     await writeFile(CACHE_PATH, JSON.stringify(data, null, 2), 'utf-8');
   } catch {
     // Silent fail - cache is optional
@@ -68,13 +68,10 @@ export async function saveCache(cache: Cache): Promise<void> {
 /**
  * Checks if a file has been modified since last cache
  */
-export async function isFileCached(
-  filePath: string,
-  cache: Cache
-): Promise<boolean> {
+export async function isFileCached(filePath: string, cache: Cache): Promise<boolean> {
   const entry = cache.entries.get(filePath);
   if (!entry) return false;
-  
+
   try {
     const stats = await stat(filePath);
     return stats.mtimeMs === entry.mtime;
@@ -86,10 +83,7 @@ export async function isFileCached(
 /**
  * Gets cached functions for a file
  */
-export function getCachedFunctions(
-  filePath: string,
-  cache: Cache
-): FunctionMetadata[] | null {
+export function getCachedFunctions(filePath: string, cache: Cache): FunctionMetadata[] | null {
   const entry = cache.entries.get(filePath);
   return entry ? entry.functions : null;
 }

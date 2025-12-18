@@ -20,11 +20,11 @@ export interface ExportOptions {
 
 /**
  * Executes the export command
- * 
+ *
  * Exports the registry in JSON, CSV, or Markdown format.
- * 
+ *
  * @param options - Export options
- * 
+ *
  * @example
  * ```typescript
  * await exportCommand({ format: 'json', output: './functions.json' });
@@ -92,9 +92,7 @@ function getDefaultOutputPath(format: string): string {
  * Exports registry to JSON format
  */
 function exportToJSON(registry: Registry, includeDuplicates = false): string {
-  const data = includeDuplicates
-    ? registry
-    : { ...registry, duplicates: undefined };
+  const data = includeDuplicates ? registry : { ...registry, duplicates: undefined };
 
   return JSON.stringify(data, null, 2);
 }
@@ -114,21 +112,18 @@ function exportToCSV(functions: FunctionMetadata[]): string {
     'Has JSDoc',
   ];
 
-  const rows = functions.map(func => [
+  const rows = functions.map((func) => [
     escapeCSV(func.name),
     escapeCSV(func.filePath),
     func.line.toString(),
-    escapeCSV(func.params.map(p => `${p.name}: ${p.type}`).join(', ')),
+    escapeCSV(func.params.map((p) => `${p.name}: ${p.type}`).join(', ')),
     escapeCSV(func.returnType),
     func.isExported ? 'Yes' : 'No',
     func.complexity.toString(),
     func.jsdoc ? 'Yes' : 'No',
   ]);
 
-  return [
-    headers.join(','),
-    ...rows.map(row => row.join(',')),
-  ].join('\n');
+  return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
 }
 
 /**
@@ -150,28 +145,34 @@ function exportToMarkdown(registry: Registry, includeDuplicates = false): string
   // Header
   lines.push('# Function Registry\n');
   lines.push(`Generated: ${new Date(registry.generatedAt).toLocaleString()}\n`);
-  
+
   // Summary
   lines.push('## Summary\n');
   lines.push(`- **Total Functions**: ${registry.totalFunctions}`);
   lines.push(`- **Total Files**: ${registry.totalFiles}`);
   lines.push(`- **Scanned Paths**: ${registry.scannedPaths.join(', ')}`);
-  
+
   if (includeDuplicates && registry.duplicates.length > 0) {
     lines.push(`- **Duplicate Groups**: ${registry.duplicates.length}`);
   }
-  
+
   lines.push('');
 
   // Complexity distribution
-  const simple = registry.functions.filter(f => f.complexity <= 5).length;
-  const moderate = registry.functions.filter(f => f.complexity > 5 && f.complexity <= 10).length;
-  const complex = registry.functions.filter(f => f.complexity > 10).length;
-  
+  const simple = registry.functions.filter((f) => f.complexity <= 5).length;
+  const moderate = registry.functions.filter((f) => f.complexity > 5 && f.complexity <= 10).length;
+  const complex = registry.functions.filter((f) => f.complexity > 10).length;
+
   lines.push('### Complexity Distribution\n');
-  lines.push(`- 🟢 Simple (≤5): ${simple} (${((simple / registry.totalFunctions) * 100).toFixed(1)}%)`);
-  lines.push(`- 🟡 Moderate (6-10): ${moderate} (${((moderate / registry.totalFunctions) * 100).toFixed(1)}%)`);
-  lines.push(`- 🔴 Complex (>10): ${complex} (${((complex / registry.totalFunctions) * 100).toFixed(1)}%)`);
+  lines.push(
+    `- 🟢 Simple (≤5): ${simple} (${((simple / registry.totalFunctions) * 100).toFixed(1)}%)`
+  );
+  lines.push(
+    `- 🟡 Moderate (6-10): ${moderate} (${((moderate / registry.totalFunctions) * 100).toFixed(1)}%)`
+  );
+  lines.push(
+    `- 🔴 Complex (>10): ${complex} (${((complex / registry.totalFunctions) * 100).toFixed(1)}%)`
+  );
   lines.push('');
 
   // Functions table
@@ -180,15 +181,15 @@ function exportToMarkdown(registry: Registry, includeDuplicates = false): string
   lines.push('|------|------|------|--------|-------------|------------|----------|');
 
   for (const func of registry.functions) {
-    const params = func.params.length > 0
-      ? func.params.map(p => `${p.name}: ${p.type}`).join(', ')
-      : '_none_';
-    
-    const complexity = func.complexity <= 5 
-      ? `🟢 ${func.complexity}`
-      : func.complexity <= 10
-        ? `🟡 ${func.complexity}`
-        : `🔴 ${func.complexity}`;
+    const params =
+      func.params.length > 0 ? func.params.map((p) => `${p.name}: ${p.type}`).join(', ') : '_none_';
+
+    const complexity =
+      func.complexity <= 5
+        ? `🟢 ${func.complexity}`
+        : func.complexity <= 10
+          ? `🟡 ${func.complexity}`
+          : `🔴 ${func.complexity}`;
 
     lines.push(
       `| \`${func.name}\` | ${func.filePath}:${func.line} | ${func.line} | ${params} | \`${func.returnType}\` | ${complexity} | ${func.isExported ? '✓' : ''} |`
@@ -200,17 +201,17 @@ function exportToMarkdown(registry: Registry, includeDuplicates = false): string
   // Duplicates section
   if (includeDuplicates && registry.duplicates.length > 0) {
     lines.push('## Potential Duplicates\n');
-    
+
     for (let i = 0; i < registry.duplicates.length; i++) {
       const group = registry.duplicates[i];
       if (!group) continue;
-      
+
       lines.push(`### Group ${i + 1} (${(group.similarity * 100).toFixed(0)}% similar)\n`);
-      
+
       for (const func of group.functions) {
         lines.push(`- \`${func.name}\` in ${func.filePath}:${func.line}`);
       }
-      
+
       lines.push('');
     }
   }
@@ -218,14 +219,16 @@ function exportToMarkdown(registry: Registry, includeDuplicates = false): string
   // Functions by complexity
   lines.push('## High Complexity Functions\n');
   const highComplexity = registry.functions
-    .filter(f => f.complexity > 10)
+    .filter((f) => f.complexity > 10)
     .sort((a, b) => b.complexity - a.complexity)
     .slice(0, 10);
 
   if (highComplexity.length > 0) {
     lines.push('Top 10 most complex functions:\n');
     for (const func of highComplexity) {
-      lines.push(`- **\`${func.name}\`** (complexity: ${func.complexity}) - ${func.filePath}:${func.line}`);
+      lines.push(
+        `- **\`${func.name}\`** (complexity: ${func.complexity}) - ${func.filePath}:${func.line}`
+      );
       if (func.jsdoc) {
         const firstLine = func.jsdoc.split('\n')[0];
         lines.push(`  > ${firstLine}`);
@@ -238,9 +241,11 @@ function exportToMarkdown(registry: Registry, includeDuplicates = false): string
   lines.push('');
 
   // Exported functions
-  const exported = registry.functions.filter(f => f.isExported);
+  const exported = registry.functions.filter((f) => f.isExported);
   lines.push('## Exported Functions\n');
-  lines.push(`${exported.length} of ${registry.totalFunctions} functions are exported (${((exported.length / registry.totalFunctions) * 100).toFixed(1)}%)\n`);
+  lines.push(
+    `${exported.length} of ${registry.totalFunctions} functions are exported (${((exported.length / registry.totalFunctions) * 100).toFixed(1)}%)\n`
+  );
 
   return lines.join('\n');
 }

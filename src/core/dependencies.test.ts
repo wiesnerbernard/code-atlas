@@ -15,7 +15,9 @@ import type { FunctionMetadata } from '../types/index.js';
 describe('extractFunctionCalls', () => {
   it('should extract function calls from a function', () => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.ts', `
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      `
       function helper() {
         return 42;
       }
@@ -26,23 +28,27 @@ describe('extractFunctionCalls', () => {
         const result = helper();
         return result;
       }
-    `);
+    `
+    );
 
     const calls = extractFunctionCalls(sourceFile, 'test');
 
     expect(calls).toHaveLength(3);
-    expect(calls.every(c => c.callee === 'helper')).toBe(true);
+    expect(calls.every((c) => c.callee === 'helper')).toBe(true);
   });
 
   it('should ignore method calls', () => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.ts', `
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      `
       function test() {
         console.log('test');
         array.map(x => x);
         return obj.method();
       }
-    `);
+    `
+    );
 
     const calls = extractFunctionCalls(sourceFile, 'test');
 
@@ -62,7 +68,9 @@ describe('extractFunctionCalls', () => {
 describe('buildDependencyGraph', () => {
   it('should build a dependency graph', () => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.ts', `
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      `
       function helper() {
         return 42;
       }
@@ -74,7 +82,8 @@ describe('buildDependencyGraph', () => {
       function unused() {
         return 0;
       }
-    `);
+    `
+    );
 
     const functions: FunctionMetadata[] = [
       {
@@ -123,10 +132,13 @@ describe('buildDependencyGraph', () => {
 
   it('should detect orphaned functions', () => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.ts', `
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      `
       export function exported() {}
       function orphan() {}
-    `);
+    `
+    );
 
     const functions: FunctionMetadata[] = [
       {
@@ -162,11 +174,14 @@ describe('buildDependencyGraph', () => {
 
   it('should identify entry points', () => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.ts', `
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      `
       export function entryPoint() {
         return 42;
       }
-    `);
+    `
+    );
 
     const functions: FunctionMetadata[] = [
       {
@@ -191,7 +206,9 @@ describe('buildDependencyGraph', () => {
 
   it('should detect circular dependencies', () => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.ts', `
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      `
       function a() {
         b();
       }
@@ -203,7 +220,8 @@ describe('buildDependencyGraph', () => {
       function c() {
         a();
       }
-    `);
+    `
+    );
 
     const functions: FunctionMetadata[] = [
       {
@@ -251,10 +269,13 @@ describe('buildDependencyGraph', () => {
 describe('generateMermaidDiagram', () => {
   it('should generate a Mermaid diagram', () => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.ts', `
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      `
       function helper() { return 42; }
       export function main() { return helper(); }
-    `);
+    `
+    );
 
     const functions: FunctionMetadata[] = [
       {
@@ -295,16 +316,49 @@ describe('generateMermaidDiagram', () => {
 
   it('should limit nodes to maxNodes', () => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.ts', `
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      `
       function a() {}
       function b() {}
       function c() {}
-    `);
+    `
+    );
 
     const functions: FunctionMetadata[] = [
-      { name: 'a', filePath: 'test.ts', line: 2, params: [], returnType: 'void', jsdoc: null, isExported: false, complexity: 1, astHash: 'h1' },
-      { name: 'b', filePath: 'test.ts', line: 3, params: [], returnType: 'void', jsdoc: null, isExported: false, complexity: 1, astHash: 'h2' },
-      { name: 'c', filePath: 'test.ts', line: 4, params: [], returnType: 'void', jsdoc: null, isExported: false, complexity: 1, astHash: 'h3' },
+      {
+        name: 'a',
+        filePath: 'test.ts',
+        line: 2,
+        params: [],
+        returnType: 'void',
+        jsdoc: null,
+        isExported: false,
+        complexity: 1,
+        astHash: 'h1',
+      },
+      {
+        name: 'b',
+        filePath: 'test.ts',
+        line: 3,
+        params: [],
+        returnType: 'void',
+        jsdoc: null,
+        isExported: false,
+        complexity: 1,
+        astHash: 'h2',
+      },
+      {
+        name: 'c',
+        filePath: 'test.ts',
+        line: 4,
+        params: [],
+        returnType: 'void',
+        jsdoc: null,
+        isExported: false,
+        complexity: 1,
+        astHash: 'h3',
+      },
     ];
 
     const sourceFiles = new Map([['test.ts', sourceFile]]);
@@ -319,10 +373,13 @@ describe('generateMermaidDiagram', () => {
 describe('generateDOTGraph', () => {
   it('should generate a DOT graph', () => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.ts', `
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      `
       function helper() { return 42; }
       export function main() { return helper(); }
-    `);
+    `
+    );
 
     const functions: FunctionMetadata[] = [
       {
@@ -362,10 +419,13 @@ describe('generateDOTGraph', () => {
 
   it('should style exported and orphaned nodes', () => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.ts', `
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      `
       export function exported() {}
       function orphan() {}
-    `);
+    `
+    );
 
     const functions: FunctionMetadata[] = [
       {

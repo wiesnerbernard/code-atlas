@@ -48,9 +48,7 @@ const mockRegistry: Registry = {
       name: 'complexFunc',
       filePath: './src/complex.ts',
       line: 100,
-      params: [
-        { name: 'data', type: 'any', optional: false },
-      ],
+      params: [{ name: 'data', type: 'any', optional: false }],
       returnType: 'Promise<void>',
       jsdoc: 'Complex function with high complexity',
       isExported: true,
@@ -61,9 +59,7 @@ const mockRegistry: Registry = {
       name: 'csvTest',
       filePath: './src/csv.ts',
       line: 20,
-      params: [
-        { name: 'value', type: 'string', optional: false },
-      ],
+      params: [{ name: 'value', type: 'string', optional: false }],
       returnType: 'string',
       jsdoc: 'Tests CSV escaping with "quotes", commas',
       isExported: true,
@@ -111,7 +107,7 @@ describe('exportCommand', () => {
   describe('JSON export', () => {
     it('should export registry to JSON format', async () => {
       const outputPath = join(TEST_DIR, 'test.json');
-      
+
       await exportCommand({
         format: 'json',
         output: outputPath,
@@ -128,7 +124,7 @@ describe('exportCommand', () => {
 
     it('should exclude duplicates when includeDuplicates is false', async () => {
       const outputPath = join(TEST_DIR, 'test-no-dups.json');
-      
+
       await exportCommand({
         format: 'json',
         output: outputPath,
@@ -146,7 +142,7 @@ describe('exportCommand', () => {
   describe('CSV export', () => {
     it('should export functions to CSV format', async () => {
       const outputPath = join(TEST_DIR, 'test.csv');
-      
+
       await exportCommand({
         format: 'csv',
         output: outputPath,
@@ -157,7 +153,7 @@ describe('exportCommand', () => {
 
       // Check header
       expect(lines[0]).toContain('Name,File Path,Line,Parameters');
-      
+
       // Check data rows
       expect(lines).toHaveLength(6); // header + 5 functions
       expect(lines[1]).toContain('testFunction');
@@ -166,7 +162,7 @@ describe('exportCommand', () => {
 
     it('should properly escape CSV special characters', async () => {
       const outputPath = join(TEST_DIR, 'test-escape.csv');
-      
+
       await exportCommand({
         format: 'csv',
         output: outputPath,
@@ -174,16 +170,16 @@ describe('exportCommand', () => {
 
       const content = await readFile(outputPath, 'utf-8');
       const lines = content.split('\n');
-      
+
       // Check that the csvTest function line exists and has proper values
-      const csvTestLine = lines.find(l => l.startsWith('csvTest'));
+      const csvTestLine = lines.find((l) => l.startsWith('csvTest'));
       expect(csvTestLine).toBeDefined();
       expect(csvTestLine).toContain('csvTest,./src/csv.ts,20');
     });
 
     it('should handle functions with no parameters', async () => {
       const outputPath = join(TEST_DIR, 'test-no-params.csv');
-      
+
       await exportCommand({
         format: 'csv',
         output: outputPath,
@@ -191,9 +187,9 @@ describe('exportCommand', () => {
 
       const content = await readFile(outputPath, 'utf-8');
       const lines = content.split('\n');
-      
+
       // simpleFunc has no parameters
-      const simpleFuncLine = lines.find(l => l.startsWith('simpleFunc'));
+      const simpleFuncLine = lines.find((l) => l.startsWith('simpleFunc'));
       expect(simpleFuncLine).toBeDefined();
       expect(simpleFuncLine).toContain(',,'); // Empty parameters field
     });
@@ -202,7 +198,7 @@ describe('exportCommand', () => {
   describe('Markdown export', () => {
     it('should export registry to Markdown format', async () => {
       const outputPath = join(TEST_DIR, 'test.md');
-      
+
       await exportCommand({
         format: 'markdown',
         output: outputPath,
@@ -217,7 +213,7 @@ describe('exportCommand', () => {
       expect(content).toContain('## Functions');
       expect(content).toContain('## Potential Duplicates');
       expect(content).toContain('## High Complexity Functions');
-      
+
       // Check data
       expect(content).toContain('**Total Functions**: 5');
       expect(content).toContain('testFunction');
@@ -226,7 +222,7 @@ describe('exportCommand', () => {
 
     it('should exclude duplicates section when includeDuplicates is false', async () => {
       const outputPath = join(TEST_DIR, 'test-no-dups.md');
-      
+
       await exportCommand({
         format: 'markdown',
         output: outputPath,
@@ -234,21 +230,21 @@ describe('exportCommand', () => {
       });
 
       const content = await readFile(outputPath, 'utf-8');
-      
+
       expect(content).not.toContain('## Potential Duplicates');
       expect(content).toContain('## Functions');
     });
 
     it('should show complexity distribution with percentages', async () => {
       const outputPath = join(TEST_DIR, 'test-complexity.md');
-      
+
       await exportCommand({
         format: 'markdown',
         output: outputPath,
       });
 
       const content = await readFile(outputPath, 'utf-8');
-      
+
       expect(content).toContain('### Complexity Distribution');
       expect(content).toContain('🟢 Simple (≤5):');
       expect(content).toContain('🟡 Moderate (6-10):');
@@ -258,14 +254,14 @@ describe('exportCommand', () => {
 
     it('should list high complexity functions', async () => {
       const outputPath = join(TEST_DIR, 'test-high-complexity.md');
-      
+
       await exportCommand({
         format: 'markdown',
         output: outputPath,
       });
 
       const content = await readFile(outputPath, 'utf-8');
-      
+
       expect(content).toContain('## High Complexity Functions');
       expect(content).toContain('complexFunc');
       expect(content).toContain('(complexity: 15)');
@@ -273,18 +269,22 @@ describe('exportCommand', () => {
 
     it('should format function table correctly', async () => {
       const outputPath = join(TEST_DIR, 'test-table.md');
-      
+
       await exportCommand({
         format: 'markdown',
         output: outputPath,
       });
 
       const content = await readFile(outputPath, 'utf-8');
-      
+
       // Check table structure
-      expect(content).toContain('| Name | File | Line | Params | Return Type | Complexity | Exported |');
-      expect(content).toContain('|------|------|------|--------|-------------|------------|----------|');
-      
+      expect(content).toContain(
+        '| Name | File | Line | Params | Return Type | Complexity | Exported |'
+      );
+      expect(content).toContain(
+        '|------|------|------|--------|-------------|------------|----------|'
+      );
+
       // Check complexity emojis
       expect(content).toContain('🟢'); // Simple
       expect(content).toContain('🔴'); // Complex
@@ -295,7 +295,7 @@ describe('exportCommand', () => {
     it('should handle missing registry gracefully', async () => {
       // Remove registry file
       await rm(REGISTRY_PATH, { force: true });
-      
+
       await expect(
         exportCommand({
           format: 'json',
@@ -312,7 +312,7 @@ describe('exportCommand', () => {
       // Default path is ./code-atlas-export.json
       const content = await readFile('./code-atlas-export.json', 'utf-8');
       expect(content).toBeTruthy();
-      
+
       // Clean up
       await rm('./code-atlas-export.json', { force: true });
     });

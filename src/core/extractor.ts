@@ -1,6 +1,6 @@
 /**
  * Metadata extractor
- * 
+ *
  * Responsible for extracting function metadata from parsed AST nodes.
  */
 
@@ -12,10 +12,10 @@ import { createHash } from 'crypto';
 
 /**
  * Extracts metadata from all exported functions in a source file
- * 
+ *
  * @param sourceFile - The ts-morph SourceFile to analyze
  * @returns Array of function metadata objects
- * 
+ *
  * @example
  * ```typescript
  * const sourceFile = project.addSourceFileAtPath('./utils.ts');
@@ -53,7 +53,7 @@ export function extractMetadata(sourceFile: SourceFile): FunctionMetadata[] {
 
 /**
  * Extracts metadata from a single function declaration
- * 
+ *
  * @param func - Function declaration node
  * @param sourceFile - Parent source file
  * @returns Function metadata or null if extraction fails
@@ -101,7 +101,7 @@ export function extractFunctionMetadata(
 
 /**
  * Checks if a function is exported
- * 
+ *
  * @param func - Function declaration to check
  * @returns True if function is exported
  */
@@ -111,7 +111,7 @@ function isExported(func: FunctionDeclaration): boolean {
 
 /**
  * Extracts parameter information from a function
- * 
+ *
  * @param func - Function declaration
  * @returns Array of parameter metadata
  */
@@ -133,7 +133,7 @@ function extractParameters(func: FunctionDeclaration): Parameter[] {
 
 /**
  * Extracts JSDoc documentation from a function
- * 
+ *
  * @param func - Function declaration
  * @returns JSDoc description or null
  */
@@ -149,9 +149,9 @@ function extractJSDoc(func: FunctionDeclaration): string | null {
 
 /**
  * Calculates cyclomatic complexity (simplified version)
- * 
+ *
  * Counts decision points: if, switch, loops, ternary, logical operators
- * 
+ *
  * @param func - Function declaration
  * @returns Complexity score
  */
@@ -182,10 +182,10 @@ function calculateComplexity(func: FunctionDeclaration): number {
 
 /**
  * Generates a hash of the function's AST structure
- * 
+ *
  * This is used for duplicate detection. The hash is based on the
  * normalized AST structure (with variable names replaced).
- * 
+ *
  * @param func - Function declaration
  * @returns SHA256 hash of AST structure
  */
@@ -196,10 +196,10 @@ function generateASTHash(func: FunctionDeclaration): string {
 
 /**
  * Normalizes AST structure for duplicate detection
- * 
+ *
  * Removes variable/parameter names, whitespace, and comments
  * to identify structurally similar functions.
- * 
+ *
  * @param func - Function declaration
  * @returns Normalized AST string representation
  */

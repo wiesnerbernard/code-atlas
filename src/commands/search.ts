@@ -11,15 +11,15 @@ import { logger } from '../utils/logger.js';
 
 /**
  * Executes the search command
- * 
+ *
  * Searches the registry for functions matching the query.
- * 
+ *
  * @param query - Search query string
  * @param options - Search options
- * 
+ *
  * @example
  * ```typescript
- * await searchCommand('format date', { 
+ * await searchCommand('format date', {
  *   interactive: true,
  *   limit: 10
  * });
@@ -62,7 +62,7 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
 
 /**
  * Searches functions using keyword matching and scoring
- * 
+ *
  * @param query - Search query
  * @param functions - Array of functions to search
  * @param limit - Maximum number of results
@@ -133,11 +133,11 @@ function displayTable(results: SearchResult[]): void {
 
   for (const result of results) {
     const { metadata } = result;
-    
+
     // Simplify file path - show relative to cwd
     const relativePath = metadata.filePath.replace(process.cwd(), '.');
     const location = `${relativePath}:${metadata.line}`;
-    
+
     // Simplify types - remove long import paths
     const params = metadata.params
       .map((p) => {
@@ -145,21 +145,17 @@ function displayTable(results: SearchResult[]): void {
         return `${p.name}: ${simpleType}`;
       })
       .join(', ');
-    
+
     const signature = `${metadata.name}(${params})`;
     const returnType = simplifyType(metadata.returnType);
-    const fullSignature = params.length > 40 
-      ? `${metadata.name}(...)\n→ ${returnType}`
-      : `${signature}\n→ ${returnType}`;
-    
+    const fullSignature =
+      params.length > 40
+        ? `${metadata.name}(...)\n→ ${returnType}`
+        : `${signature}\n→ ${returnType}`;
+
     const desc = metadata.jsdoc || chalk.dim('No description');
 
-    table.push([
-      chalk.blue.bold(metadata.name),
-      chalk.dim(location),
-      fullSignature,
-      desc,
-    ]);
+    table.push([chalk.blue.bold(metadata.name), chalk.dim(location), fullSignature, desc]);
   }
 
   console.log(table.toString());
@@ -172,17 +168,17 @@ function displayTable(results: SearchResult[]): void {
 function simplifyType(type: string): string {
   // Remove import paths
   type = type.replace(/import\([^)]+\)\./g, '');
-  
+
   // Shorten common patterns
   type = type.replace(/Promise<(.+)>/g, '$1');
   type = type.replace(/Array</g, '');
   type = type.replace(/>$/g, '[]');
-  
+
   // Truncate if still too long
   if (type.length > 50) {
     return type.substring(0, 47) + '...';
   }
-  
+
   return type;
 }
 

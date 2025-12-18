@@ -9,9 +9,9 @@ import { logger } from '../utils/logger.js';
 
 /**
  * Executes the stats command
- * 
+ *
  * Displays statistics about the current registry.
- * 
+ *
  * @example
  * ```typescript
  * await statsCommand();
@@ -41,9 +41,7 @@ export async function statsCommand(): Promise<void> {
 
       for (const group of registry.duplicates) {
         const names = group.functions.map((f) => f.name).join(', ');
-        const locations = group.functions
-          .map((f) => `${f.filePath}:${f.line}`)
-          .join('\n');
+        const locations = group.functions.map((f) => `${f.filePath}:${f.line}`).join('\n');
 
         table.push([names, locations, `${(group.similarity * 100).toFixed(0)}%`]);
       }

@@ -1,6 +1,6 @@
 /**
  * Git integration module
- * 
+ *
  * Extracts Git metadata for functions including last author,
  * modification dates, and churn metrics.
  */
@@ -44,7 +44,7 @@ export async function isGitRepository(cwd: string = process.cwd()): Promise<bool
 
 /**
  * Gets Git blame information for a specific line range
- * 
+ *
  * @param filePath - Relative path to file
  * @param startLine - Start line number
  * @param endLine - End line number (optional, defaults to startLine)
@@ -59,10 +59,10 @@ export async function getGitBlame(
 ): Promise<GitMetadata | null> {
   try {
     const range = endLine ? `${startLine},${endLine}` : `${startLine}`;
-    const { stdout } = await execAsync(
-      `git blame -L ${range} --line-porcelain "${filePath}"`,
-      { cwd, maxBuffer: 1024 * 1024 }
-    );
+    const { stdout } = await execAsync(`git blame -L ${range} --line-porcelain "${filePath}"`, {
+      cwd,
+      maxBuffer: 1024 * 1024,
+    });
 
     // Parse porcelain format
     const lines = stdout.split('\n');
@@ -138,7 +138,7 @@ async function getCommitStats(
 
 /**
  * Enriches function metadata with Git information
- * 
+ *
  * @param functions - Array of function metadata
  * @param cwd - Working directory
  * @returns Enriched function metadata with Git info
@@ -150,7 +150,7 @@ export async function enrichWithGitMetadata(
   // Check if Git is available
   const hasGit = await isGitRepository(cwd);
   if (!hasGit) {
-    return functions.map(f => ({ ...f, git: undefined }));
+    return functions.map((f) => ({ ...f, git: undefined }));
   }
 
   // Process functions in parallel (but limit concurrency)
@@ -178,12 +178,12 @@ export async function enrichWithGitMetadata(
 
 /**
  * Calculates churn metrics for functions
- * 
+ *
  * High churn (frequent changes) might indicate:
  * - Active development
  * - Bug-prone code
  * - Unclear requirements
- * 
+ *
  * @param functions - Enriched function metadata
  * @returns Functions with churn score (0-1)
  */
@@ -191,12 +191,12 @@ export function calculateChurnScores(
   functions: EnrichedFunctionMetadata[]
 ): Array<EnrichedFunctionMetadata & { churnScore: number }> {
   // Find max commit count for normalization
-  const maxCommits = Math.max(...functions.map(f => f.git?.commitCount || 0), 1);
+  const maxCommits = Math.max(...functions.map((f) => f.git?.commitCount || 0), 1);
 
-  return functions.map(func => {
+  return functions.map((func) => {
     const commitCount = func.git?.commitCount || 0;
     const totalChanges = (func.git?.linesAdded || 0) + (func.git?.linesDeleted || 0);
-    
+
     // Churn score: normalized combination of commit frequency and line changes
     const commitScore = commitCount / maxCommits;
     const changeScore = Math.min(totalChanges / 100, 1); // Cap at 100 lines
@@ -208,9 +208,9 @@ export function calculateChurnScores(
 
 /**
  * Gets hot spots (high complexity + high churn)
- * 
+ *
  * These are risky areas that change frequently and are complex.
- * 
+ *
  * @param functions - Enriched functions with churn scores
  * @param threshold - Minimum score to be considered a hot spot (0-1)
  * @returns Array of hot spot functions
@@ -219,14 +219,14 @@ export function getHotSpots(
   functions: Array<EnrichedFunctionMetadata & { churnScore: number }>,
   threshold = 0.5
 ): Array<EnrichedFunctionMetadata & { churnScore: number; riskScore: number }> {
-  const maxComplexity = Math.max(...functions.map(f => f.complexity), 1);
+  const maxComplexity = Math.max(...functions.map((f) => f.complexity), 1);
 
   return functions
-    .map(func => {
+    .map((func) => {
       const complexityScore = func.complexity / maxComplexity;
       const riskScore = (complexityScore + func.churnScore) / 2;
       return { ...func, riskScore };
     })
-    .filter(func => func.riskScore >= threshold)
+    .filter((func) => func.riskScore >= threshold)
     .sort((a, b) => b.riskScore - a.riskScore);
 }

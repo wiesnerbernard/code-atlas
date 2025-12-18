@@ -12,31 +12,28 @@ import { enrichWithGitMetadata } from '../core/git.js';
 
 /**
  * Executes the scan command
- * 
+ *
  * Crawls the specified paths, parses files, extracts metadata,
  * and builds a registry.
- * 
+ *
  * @param paths - Root directories to scan
  * @param options - Scan options
- * 
+ *
  * @example
  * ```typescript
- * await scanCommand(['./src'], { 
+ * await scanCommand(['./src'], {
  *   ignore: ['**\/legacy/**'],
  *   output: '.code-atlas/registry.json'
  * });
  * ```
  */
-export async function scanCommand(
-  cliPaths: string[],
-  cliOptions: ScanOptions
-): Promise<void> {
+export async function scanCommand(cliPaths: string[], cliOptions: ScanOptions): Promise<void> {
   const startTime = Date.now();
 
   try {
     // Load config file
     const config = await loadConfig();
-    
+
     // Merge config with CLI options (CLI takes precedence)
     const options = mergeConfig(config, cliOptions);
     const paths = getPathsFromConfig(config, cliPaths);
@@ -60,8 +57,8 @@ export async function scanCommand(
 
     // Step 2: Parse files and extract metadata (with caching and parallel processing)
     const parseResults = await parseFiles(crawlResult.files, !options.noCache);
-    
-    const allMetadata = parseResults.flatMap(result => result.metadata);
+
+    const allMetadata = parseResults.flatMap((result) => result.metadata);
 
     // Filter by complexity if specified
     const filteredMetadata = options.maxComplexity
@@ -89,7 +86,7 @@ export async function scanCommand(
     // Summary
     const duration = Date.now() - startTime;
     logger.success(`Scan completed in ${(duration / 1000).toFixed(2)}s`);
-    
+
     if (registry.duplicates.length > 0) {
       logger.info(`\nDuplicate groups found: ${registry.duplicates.length}`);
       logger.info('Run "code-atlas stats" to view details');

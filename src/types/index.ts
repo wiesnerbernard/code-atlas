@@ -1,6 +1,6 @@
 /**
  * Type definitions for Code-Atlas
- * 
+ *
  * This module contains all shared TypeScript interfaces and types
  * used across the application.
  */
@@ -11,28 +11,28 @@
 export interface FunctionMetadata {
   /** Function name (or 'anonymous' for unnamed functions) */
   name: string;
-  
+
   /** Absolute file path */
   filePath: string;
-  
+
   /** Line number where function is declared (1-indexed) */
   line: number;
-  
+
   /** Function parameters with types */
   params: Parameter[];
-  
+
   /** Return type as string */
   returnType: string;
-  
+
   /** JSDoc documentation (null if not present) */
   jsdoc: string | null;
-  
+
   /** Whether function is exported */
   isExported: boolean;
-  
+
   /** Cyclomatic complexity score */
   complexity: number;
-  
+
   /** SHA256 hash of normalized AST structure */
   astHash: string;
 }
@@ -43,13 +43,13 @@ export interface FunctionMetadata {
 export interface Parameter {
   /** Parameter name */
   name: string;
-  
+
   /** Parameter type as string */
   type: string;
-  
+
   /** Whether parameter is optional */
   optional: boolean;
-  
+
   /** Default value if present */
   defaultValue?: string;
 }
@@ -60,25 +60,25 @@ export interface Parameter {
 export interface Registry {
   /** Registry schema version */
   version: string;
-  
+
   /** ISO timestamp when registry was generated */
   generatedAt: string;
-  
+
   /** Root directories that were scanned */
   scannedPaths: string[];
-  
+
   /** Total number of files scanned */
   totalFiles: number;
-  
+
   /** Total number of functions indexed */
   totalFunctions: number;
-  
+
   /** Array of all function metadata */
   functions: FunctionMetadata[];
-  
+
   /** Detected duplicate function groups */
   duplicates: DuplicateGroup[];
-  
+
   /** Dependency graph data (optional) */
   dependencies?: {
     orphanCount: number;
@@ -93,10 +93,10 @@ export interface Registry {
 export interface DuplicateGroup {
   /** AST hash that these functions share */
   astHash: string;
-  
+
   /** Array of function references */
   functions: DuplicateReference[];
-  
+
   /** Similarity score (0.0 to 1.0) */
   similarity: number;
 }
@@ -107,10 +107,10 @@ export interface DuplicateGroup {
 export interface DuplicateReference {
   /** Function name */
   name: string;
-  
+
   /** File path */
   filePath: string;
-  
+
   /** Line number */
   line: number;
 }
@@ -121,19 +121,19 @@ export interface DuplicateReference {
 export interface ScanOptions {
   /** Glob patterns to ignore */
   ignore?: string[];
-  
+
   /** Output file path for registry */
   output?: string;
-  
+
   /** Include test files in scan */
   includeTests?: boolean;
-  
+
   /** Maximum cyclomatic complexity threshold */
   maxComplexity?: number;
-  
+
   /** Include Git metadata (author, dates, churn) */
   includeGit?: boolean;
-  
+
   /** Disable caching for fresh parse */
   noCache?: boolean;
 }
@@ -144,10 +144,10 @@ export interface ScanOptions {
 export interface SearchOptions {
   /** Output format (table, json, markdown) */
   format?: 'table' | 'json' | 'markdown';
-  
+
   /** Interactive mode with fuzzy search */
   interactive?: boolean;
-  
+
   /** Maximum number of results */
   limit?: number;
 }
@@ -158,10 +158,10 @@ export interface SearchOptions {
 export interface SearchResult {
   /** The matched function metadata */
   metadata: FunctionMetadata;
-  
+
   /** Relevance score (higher is better) */
   score: number;
-  
+
   /** Matched fields (name, jsdoc, path) */
   matchedFields: string[];
 }
@@ -172,10 +172,10 @@ export interface SearchResult {
 export interface CrawlResult {
   /** Absolute file paths found */
   files: string[];
-  
+
   /** Files that were skipped (with reasons) */
   skipped: SkippedFile[];
-  
+
   /** Time taken in milliseconds */
   duration: number;
 }
@@ -186,7 +186,7 @@ export interface CrawlResult {
 export interface SkippedFile {
   /** File path */
   path: string;
-  
+
   /** Reason for skipping */
   reason: string;
 }
@@ -197,10 +197,10 @@ export interface SkippedFile {
 export interface ParseResult {
   /** File path */
   filePath: string;
-  
+
   /** Extracted metadata (empty if parse failed) */
   metadata: FunctionMetadata[];
-  
+
   /** Error message if parsing failed */
   error?: string;
 }

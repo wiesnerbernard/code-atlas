@@ -16,11 +16,11 @@ export interface ReportOptions {
 
 /**
  * Executes the report command
- * 
+ *
  * Generates an interactive HTML report from the registry.
- * 
+ *
  * @param options - Report options
- * 
+ *
  * @example
  * ```typescript
  * await reportCommand({ output: './docs/functions.html' });
@@ -57,13 +57,15 @@ export async function reportCommand(options: ReportOptions): Promise<void> {
  */
 function generateHTML(registry: Registry): string {
   const cwd = process.cwd() + '/';
-  
+
   // Replace absolute paths with relative paths
   const functionsWithRelativePaths = registry.functions.map((func) => ({
     ...func,
-    filePath: func.filePath.startsWith(cwd) ? './' + func.filePath.slice(cwd.length) : func.filePath
+    filePath: func.filePath.startsWith(cwd)
+      ? './' + func.filePath.slice(cwd.length)
+      : func.filePath,
   }));
-  
+
   const functionsJSON = JSON.stringify(functionsWithRelativePaths, null, 2);
   const duplicatesJSON = JSON.stringify(registry.duplicates, null, 2);
 
@@ -284,12 +286,16 @@ function generateHTML(registry: Registry): string {
             </div>
         </div>
         
-        ${registry.duplicates.length > 0 ? `
+        ${
+          registry.duplicates.length > 0
+            ? `
         <div class="duplicates-section">
             <h2>⚠️ Duplicate Functions Detected</h2>
             <p>${registry.duplicates.length} group(s) of similar functions found. Consider consolidating these.</p>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
         
         <div class="tabs">
             <div class="tab active" onclick="showTab('all')">All Functions</div>

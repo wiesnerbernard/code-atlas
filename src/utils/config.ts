@@ -1,6 +1,6 @@
 /**
  * Configuration file loader
- * 
+ *
  * Handles loading and parsing .code-atlasrc.json configuration files.
  */
 
@@ -16,28 +16,28 @@ import { logger } from '../utils/logger.js';
 export interface ConfigFile {
   /** Glob patterns to ignore */
   ignore?: string[];
-  
+
   /** Include test files in scan */
   includeTests?: boolean;
-  
+
   /** Maximum cyclomatic complexity threshold */
   maxComplexity?: number;
-  
+
   /** Output file path for registry */
   output?: string;
-  
+
   /** Paths to scan (default: ['./src']) */
   paths?: string[];
 }
 
 /**
  * Loads configuration from .code-atlasrc.json
- * 
+ *
  * Searches for config file in current directory and parent directories.
- * 
+ *
  * @param startDir - Directory to start searching from (default: cwd)
  * @returns Configuration object or null if not found
- * 
+ *
  * @example
  * ```typescript
  * const config = await loadConfig();
@@ -48,7 +48,7 @@ export interface ConfigFile {
  */
 export async function loadConfig(startDir: string = process.cwd()): Promise<ConfigFile | null> {
   const configPath = findConfigFile(startDir);
-  
+
   if (!configPath) {
     logger.debug('No .code-atlasrc.json found');
     return null;
@@ -57,7 +57,7 @@ export async function loadConfig(startDir: string = process.cwd()): Promise<Conf
   try {
     const content = await readFile(configPath, 'utf-8');
     const config = JSON.parse(content) as ConfigFile;
-    
+
     logger.debug(`Loaded config from ${configPath}`);
     return config;
   } catch (error) {
@@ -69,7 +69,7 @@ export async function loadConfig(startDir: string = process.cwd()): Promise<Conf
 
 /**
  * Finds .code-atlasrc.json by walking up directory tree
- * 
+ *
  * @param startDir - Directory to start searching from
  * @returns Path to config file or null
  */
@@ -80,35 +80,32 @@ function findConfigFile(startDir: string): string | null {
   // Walk up directory tree
   while (true) {
     const configPath = join(currentDir, configFileName);
-    
+
     if (existsSync(configPath)) {
       return configPath;
     }
 
     const parentDir = join(currentDir, '..');
-    
+
     // Stop at filesystem root
     if (parentDir === currentDir) {
       return null;
     }
-    
+
     currentDir = parentDir;
   }
 }
 
 /**
  * Merges config file with CLI options
- * 
+ *
  * CLI options take precedence over config file.
- * 
+ *
  * @param config - Config file settings
  * @param options - CLI options
  * @returns Merged options
  */
-export function mergeConfig(
-  config: ConfigFile | null,
-  options: ScanOptions
-): ScanOptions {
+export function mergeConfig(config: ConfigFile | null, options: ScanOptions): ScanOptions {
   if (!config) {
     return options;
   }
@@ -123,25 +120,22 @@ export function mergeConfig(
 
 /**
  * Gets default paths from config or returns default
- * 
+ *
  * @param config - Config file settings
  * @param cliPaths - Paths from CLI arguments
  * @returns Array of paths to scan
  */
-export function getPathsFromConfig(
-  config: ConfigFile | null,
-  cliPaths: string[]
-): string[] {
+export function getPathsFromConfig(config: ConfigFile | null, cliPaths: string[]): string[] {
   // CLI paths take precedence
   if (cliPaths.length > 0) {
     return cliPaths;
   }
-  
+
   // Use config paths if available
   if (config?.paths && config.paths.length > 0) {
     return config.paths;
   }
-  
+
   // Default to ./src
   return ['./src'];
 }

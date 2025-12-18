@@ -3,11 +3,11 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { 
+import {
   isGitRepository,
   enrichWithGitMetadata,
   calculateChurnScores,
-  getHotSpots
+  getHotSpots,
 } from './git.js';
 import type { FunctionMetadata } from '../types/index.js';
 
@@ -52,7 +52,7 @@ describe('isGitRepository', () => {
 describe('enrichWithGitMetadata', () => {
   it('should return functions without Git metadata when not in a Git repo', async () => {
     const enriched = await enrichWithGitMetadata(mockFunctions, '/tmp');
-    
+
     expect(enriched).toHaveLength(2);
     expect(enriched[0]?.git).toBeUndefined();
     expect(enriched[1]?.git).toBeUndefined();
@@ -75,9 +75,9 @@ describe('enrichWithGitMetadata', () => {
     ];
 
     const enriched = await enrichWithGitMetadata(functions, process.cwd());
-    
+
     expect(enriched).toHaveLength(1);
-    
+
     // Git metadata should be present (this file should have git history)
     const func = enriched[0];
     if (func?.git) {
@@ -121,7 +121,7 @@ describe('calculateChurnScores', () => {
     expect(withChurn).toHaveLength(2);
     expect(withChurn[0]?.churnScore).toBeGreaterThan(0);
     expect(withChurn[1]?.churnScore).toBeGreaterThan(0);
-    
+
     // First function has more commits, should have higher churn
     expect(withChurn[0]!.churnScore).toBeGreaterThan(withChurn[1]!.churnScore);
   });
@@ -221,9 +221,7 @@ describe('getHotSpots', () => {
   });
 
   it('should return empty array when no hot spots exist', () => {
-    const functionsWithChurn = [
-      { ...mockFunctions[0]!, complexity: 1, churnScore: 0.1 },
-    ];
+    const functionsWithChurn = [{ ...mockFunctions[0]!, complexity: 1, churnScore: 0.1 }];
 
     const hotSpots = getHotSpots(functionsWithChurn, 0.9);
 

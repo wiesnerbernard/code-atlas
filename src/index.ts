@@ -1,6 +1,6 @@
 /**
  * Code-Atlas main index
- * 
+ *
  * Exports the core API for programmatic usage.
  */
 

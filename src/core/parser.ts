@@ -1,6 +1,6 @@
 /**
  * AST parser using ts-morph with parallel processing
- * 
+ *
  * Responsible for parsing TypeScript/JavaScript files into
  * Abstract Syntax Trees for analysis.
  */
@@ -13,12 +13,12 @@ import { dirname, join } from 'path';
 import cliProgress from 'cli-progress';
 import type { ParseResult, FunctionMetadata } from '../types/index.js';
 import { logger } from '../utils/logger.js';
-import { 
-  loadCache, 
-  saveCache, 
-  isFileCached, 
+import {
+  loadCache,
+  saveCache,
+  isFileCached,
   getCachedFunctions,
-  updateCacheEntry
+  updateCacheEntry,
 } from './cache.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,7 +29,7 @@ let projectInstance: Project | null = null;
 
 /**
  * Gets or creates the shared Project instance
- * 
+ *
  * @returns Project instance
  */
 function getProject(): Project {
@@ -50,12 +50,12 @@ function getProject(): Project {
 
 /**
  * Parses a single file and returns its SourceFile representation
- * 
+ *
  * Gracefully handles parse errors by logging a warning and returning null.
- * 
+ *
  * @param filePath - Absolute path to file
  * @returns SourceFile or null if parsing failed
- * 
+ *
  * @example
  * ```typescript
  * const sourceFile = await parseFile('/path/to/file.ts');
@@ -79,29 +79,26 @@ export async function parseFile(filePath: string): Promise<SourceFile | null> {
 
 /**
  * Parses multiple files using worker threads and caching for optimal performance
- * 
+ *
  * Uses:
  * - Cache to skip unchanged files
  * - Worker threads for parallel parsing
  * - Progress bar for feedback
- * 
+ *
  * @param filePaths - Array of absolute file paths
  * @param useCache - Whether to use cache (default: true)
  * @returns Array of ParseResult objects
- * 
+ *
  * @example
  * ```typescript
  * const results = await parseFiles(files);
  * const successCount = results.filter(r => !r.error).length;
  * ```
  */
-export async function parseFiles(
-  filePaths: string[],
-  useCache = true
-): Promise<ParseResult[]> {
+export async function parseFiles(filePaths: string[], useCache = true): Promise<ParseResult[]> {
   const results: ParseResult[] = [];
   const cache = useCache ? await loadCache() : { version: '0.1.0', entries: new Map() };
-  
+
   logger.info(`Parsing ${filePaths.length} files...`);
 
   // Create progress bar
@@ -119,7 +116,7 @@ export async function parseFiles(
   const uncachedFiles: string[] = [];
 
   for (const filePath of filePaths) {
-    if (useCache && await isFileCached(filePath, cache)) {
+    if (useCache && (await isFileCached(filePath, cache))) {
       cachedFiles.push(filePath);
     } else {
       uncachedFiles.push(filePath);
@@ -156,7 +153,7 @@ export async function parseFiles(
   }
 
   const workerResults = await Promise.all(
-    chunks.map(chunk => parseFilesInWorker(chunk, progressBar, cachedFiles.length))
+    chunks.map((chunk) => parseFilesInWorker(chunk, progressBar, cachedFiles.length))
   );
 
   // Aggregate worker results and update cache
@@ -167,7 +164,7 @@ export async function parseFiles(
         metadata: functions,
         error: undefined,
       });
-      
+
       if (useCache) {
         await updateCacheEntry(filePath, functions, cache);
       }
@@ -216,34 +213,37 @@ async function parseFilesInWorker(
 
     let processedCount = 0;
 
-    worker.on('message', (result: {
-      functions: FunctionMetadata[];
-      errors: Array<{ filePath: string; error: string }>;
-    }) => {
-      // Group functions by file path
-      const functionsByFile = new Map<string, FunctionMetadata[]>();
-      for (const func of result.functions) {
-        if (!functionsByFile.has(func.filePath)) {
-          functionsByFile.set(func.filePath, []);
+    worker.on(
+      'message',
+      (result: {
+        functions: FunctionMetadata[];
+        errors: Array<{ filePath: string; error: string }>;
+      }) => {
+        // Group functions by file path
+        const functionsByFile = new Map<string, FunctionMetadata[]>();
+        for (const func of result.functions) {
+          if (!functionsByFile.has(func.filePath)) {
+            functionsByFile.set(func.filePath, []);
+          }
+          functionsByFile.get(func.filePath)!.push(func);
         }
-        functionsByFile.get(func.filePath)!.push(func);
-      }
 
-      // Fill in empty arrays for files with no functions
-      for (const filePath of filePaths) {
-        if (!functionsByFile.has(filePath)) {
-          functionsByFile.set(filePath, []);
+        // Fill in empty arrays for files with no functions
+        for (const filePath of filePaths) {
+          if (!functionsByFile.has(filePath)) {
+            functionsByFile.set(filePath, []);
+          }
         }
+
+        processedCount = filePaths.length;
+        progressBar.update(offset + processedCount);
+
+        resolve({
+          functions: functionsByFile,
+          errors: result.errors,
+        });
       }
-
-      processedCount = filePaths.length;
-      progressBar.update(offset + processedCount);
-
-      resolve({
-        functions: functionsByFile,
-        errors: result.errors,
-      });
-    });
+    );
 
     worker.on('error', (error) => {
       reject(error);

@@ -1,6 +1,6 @@
 /**
  * Worker thread for parallel file parsing
- * 
+ *
  * Parses files in isolation to avoid memory bloat from ts-morph.
  */
 
@@ -39,7 +39,7 @@ async function parseFilesInWorker(filePaths: string[]): Promise<WorkerResult> {
   for (const filePath of filePaths) {
     try {
       const sourceFile = project.addSourceFileAtPath(filePath);
-      
+
       // Extract functions from this file
       for (const func of sourceFile.getFunctions()) {
         const metadata = extractFunctionMetadata(func, sourceFile);
@@ -59,12 +59,12 @@ async function parseFilesInWorker(filePaths: string[]): Promise<WorkerResult> {
 // Execute worker task
 if (parentPort && workerData) {
   const { filePaths } = workerData as WorkerData;
-  
+
   parseFilesInWorker(filePaths)
-    .then(result => {
+    .then((result) => {
       parentPort!.postMessage(result);
     })
-    .catch(error => {
+    .catch((error) => {
       parentPort!.postMessage({
         functions: [],
         errors: [{ filePath: 'worker', error: error.message }],

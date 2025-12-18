@@ -11,23 +11,20 @@ import { logger } from '../utils/logger.js';
 
 /**
  * Executes the watch command
- * 
+ *
  * Monitors file changes and automatically updates the registry.
- * 
+ *
  * @param cliPaths - Root directories to watch
  * @param options - Watch options
- * 
+ *
  * @example
  * ```typescript
- * await watchCommand(['./src'], { 
+ * await watchCommand(['./src'], {
  *   ignore: ['**\/legacy/**']
  * });
  * ```
  */
-export async function watchCommand(
-  cliPaths: string[],
-  options: ScanOptions
-): Promise<void> {
+export async function watchCommand(cliPaths: string[], options: ScanOptions): Promise<void> {
   try {
     // Load config file
     const config = await loadConfig();
@@ -102,7 +99,7 @@ export async function watchCommand(
       logger.success('Watch mode stopped');
       process.exit(0);
     };
-    
+
     process.on('SIGINT', () => {
       void handleShutdown();
     });

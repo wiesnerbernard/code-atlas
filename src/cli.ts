@@ -2,7 +2,7 @@
 
 /**
  * Code-Atlas CLI entry point
- * 
+ *
  * Defines CLI commands and options using Commander.
  */
 

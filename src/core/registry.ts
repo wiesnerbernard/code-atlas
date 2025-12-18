@@ -1,6 +1,6 @@
 /**
  * Registry management
- * 
+ *
  * Handles reading, writing, and querying the function registry.
  */
 
@@ -21,7 +21,7 @@ export const REGISTRY_VERSION = '0.1.0';
 
 /**
  * Creates a new registry from function metadata
- * 
+ *
  * @param functions - Array of function metadata
  * @param scannedPaths - Paths that were scanned
  * @param totalFiles - Number of files scanned
@@ -47,10 +47,10 @@ export function createRegistry(
 
 /**
  * Saves a registry to disk
- * 
+ *
  * @param registry - Registry to save
  * @param outputPath - Output file path (default: .code-atlas/registry.json)
- * 
+ *
  * @example
  * ```typescript
  * await saveRegistry(registry, '.code-atlas/registry.json');
@@ -84,10 +84,10 @@ export async function saveRegistry(
 
 /**
  * Loads a registry from disk
- * 
+ *
  * @param inputPath - Path to registry file
  * @returns Loaded registry
- * 
+ *
  * @throws Error if file doesn't exist or is invalid
  */
 export async function loadRegistry(inputPath: string = DEFAULT_REGISTRY_PATH): Promise<Registry> {
@@ -113,9 +113,9 @@ export async function loadRegistry(inputPath: string = DEFAULT_REGISTRY_PATH): P
 
 /**
  * Detects duplicate functions based on AST hash
- * 
+ *
  * Groups functions with identical or similar AST hashes.
- * 
+ *
  * @param functions - Array of function metadata
  * @returns Array of duplicate groups
  */
@@ -155,9 +155,9 @@ function detectDuplicates(functions: FunctionMetadata[]): DuplicateGroup[] {
 
 /**
  * Finds near-duplicate functions using optimized hash-based pre-filtering
- * 
+ *
  * Only compares functions with similar hash prefixes to reduce O(n²) comparisons.
- * 
+ *
  * @param functions - Array of function metadata
  * @returns Array of near-duplicate groups
  */
@@ -168,7 +168,7 @@ function findNearDuplicates(functions: FunctionMetadata[]): DuplicateGroup[] {
 
   // Group functions by hash prefix for faster comparison
   const hashPrefixMap = new Map<string, FunctionMetadata[]>();
-  
+
   for (const func of functions) {
     const prefix = func.astHash.substring(0, HASH_PREFIX_LENGTH);
     const existing = hashPrefixMap.get(prefix) ?? [];
@@ -212,7 +212,7 @@ function findNearDuplicates(functions: FunctionMetadata[]): DuplicateGroup[] {
 
 /**
  * Calculates similarity between two strings using Levenshtein distance
- * 
+ *
  * @param str1 - First string
  * @param str2 - Second string
  * @returns Similarity score (0.0 to 1.0)
@@ -229,7 +229,7 @@ function calculateSimilarity(str1: string, str2: string): number {
 
 /**
  * Calculates Levenshtein distance between two strings
- * 
+ *
  * @param str1 - First string
  * @param str2 - Second string
  * @returns Edit distance
@@ -256,7 +256,7 @@ function levenshteinDistance(str1: string, str2: string): number {
         const prevDiag = matrix[i - 1]?.[j - 1];
         const prevRow = matrix[i - 1]?.[j];
         const prevCol = matrix[i]?.[j - 1];
-        
+
         if (prevDiag !== undefined && prevRow !== undefined && prevCol !== undefined && matrix[i]) {
           matrix[i]![j] = Math.min(prevDiag + 1, prevRow + 1, prevCol + 1);
         }
@@ -269,7 +269,7 @@ function levenshteinDistance(str1: string, str2: string): number {
 
 /**
  * Gets the default registry path for a project
- * 
+ *
  * @param projectRoot - Project root directory
  * @returns Full path to registry file
  */
