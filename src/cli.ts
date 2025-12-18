@@ -12,6 +12,8 @@ import { searchCommand } from './commands/search.js';
 import { statsCommand } from './commands/stats.js';
 import { watchCommand } from './commands/watch.js';
 import { reportCommand } from './commands/report.js';
+import { graphCommand } from './commands/graph.js';
+import { exportCommand } from './commands/export.js';
 import { DEFAULT_REGISTRY_PATH } from './core/registry.js';
 import { logger } from './utils/logger.js';
 
@@ -20,7 +22,7 @@ const program = new Command();
 program
   .name('code-atlas')
   .description('CLI tool to scan and index utility functions in codebases')
-  .version('0.1.0');
+  .version('0.3.0');
 
 // Scan command
 program
@@ -32,6 +34,7 @@ program
   .option('--include-tests', 'Include test files in scan', false)
   .option('--include-git', 'Include Git metadata (author, dates, churn)', false)
   .option('--max-complexity <number>', 'Maximum cyclomatic complexity threshold', parseInt)
+  .option('--no-cache', 'Disable caching for fresh parse')
   .action(async (paths: string[], options) => {
     try {
       await scanCommand(paths, {
@@ -40,6 +43,7 @@ program
         includeTests: options.includeTests,
         includeGit: options.includeGit,
         maxComplexity: options.maxComplexity,
+        noCache: options.cache === false, // commander sets to false when --no-cache is used
       });
     } catch (error) {
       logger.error('Scan command failed');
@@ -114,6 +118,50 @@ program
       });
     } catch (error) {
       logger.error('Watch command failed');
+      process.exit(1);
+    }
+  });
+
+// Graph command
+program
+  .command('graph')
+  .description('Generate dependency graph visualization')
+  .option('-f, --format <format>', 'Output format (mermaid, dot, json)', 'mermaid')
+  .option('-o, --output <path>', 'Output file path')
+  .option('--max-nodes <number>', 'Maximum nodes to include in graph', parseInt, 50)
+  .option('--show-orphans', 'Show orphaned functions details', false)
+  .option('--show-circular', 'Show circular dependencies details', false)
+  .action(async (options) => {
+    try {
+      await graphCommand({
+        format: options.format as 'mermaid' | 'dot' | 'json',
+        output: options.output,
+        maxNodes: options.maxNodes,
+        showOrphans: options.showOrphans,
+        showCircular: options.showCircular,
+      });
+    } catch (error) {
+      logger.error('Graph command failed');
+      process.exit(1);
+    }
+  });
+
+// Export command
+program
+  .command('export')
+  .description('Export registry in various formats')
+  .option('-f, --format <format>', 'Export format (json, csv, markdown)', 'json')
+  .option('-o, --output <path>', 'Output file path')
+  .option('--include-duplicates', 'Include duplicate detection in export', false)
+  .action(async (options) => {
+    try {
+      await exportCommand({
+        format: options.format as 'json' | 'csv' | 'markdown',
+        output: options.output,
+        includeDuplicates: options.includeDuplicates,
+      });
+    } catch (error) {
+      logger.error('Export command failed');
       process.exit(1);
     }
   });

@@ -154,7 +154,9 @@ function detectDuplicates(functions: FunctionMetadata[]): DuplicateGroup[] {
 }
 
 /**
- * Finds near-duplicate functions using Levenshtein distance
+ * Finds near-duplicate functions using optimized hash-based pre-filtering
+ * 
+ * Only compares functions with similar hash prefixes to reduce O(n²) comparisons.
  * 
  * @param functions - Array of function metadata
  * @returns Array of near-duplicate groups
@@ -162,30 +164,45 @@ function detectDuplicates(functions: FunctionMetadata[]): DuplicateGroup[] {
 function findNearDuplicates(functions: FunctionMetadata[]): DuplicateGroup[] {
   const nearDuplicates: DuplicateGroup[] = [];
   const SIMILARITY_THRESHOLD = 0.85; // 85% similar
+  const HASH_PREFIX_LENGTH = 8; // Compare first 8 chars of hash
 
-  // Compare each function pair
-  for (let i = 0; i < functions.length; i++) {
-    for (let j = i + 1; j < functions.length; j++) {
-      const func1 = functions[i];
-      const func2 = functions[j];
+  // Group functions by hash prefix for faster comparison
+  const hashPrefixMap = new Map<string, FunctionMetadata[]>();
+  
+  for (const func of functions) {
+    const prefix = func.astHash.substring(0, HASH_PREFIX_LENGTH);
+    const existing = hashPrefixMap.get(prefix) ?? [];
+    existing.push(func);
+    hashPrefixMap.set(prefix, existing);
+  }
 
-      // Skip if already in exact match group
-      if (func1?.astHash === func2?.astHash) continue;
+  // Only compare functions within same hash prefix groups
+  for (const group of hashPrefixMap.values()) {
+    if (group.length < 2) continue;
 
-      // Calculate similarity using Levenshtein distance
-      const hash1 = func1?.astHash ?? '';
-      const hash2 = func2?.astHash ?? '';
-      const similarity = calculateSimilarity(hash1, hash2);
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        const func1 = group[i];
+        const func2 = group[j];
 
-      if (similarity >= SIMILARITY_THRESHOLD) {
-        nearDuplicates.push({
-          astHash: `fuzzy_${hash1.substring(0, 8)}_${hash2.substring(0, 8)}`,
-          functions: [
-            { name: func1?.name ?? '', filePath: func1?.filePath ?? '', line: func1?.line ?? 0 },
-            { name: func2?.name ?? '', filePath: func2?.filePath ?? '', line: func2?.line ?? 0 },
-          ],
-          similarity,
-        });
+        // Skip if already in exact match group
+        if (func1?.astHash === func2?.astHash) continue;
+
+        // Calculate similarity using Levenshtein distance
+        const hash1 = func1?.astHash ?? '';
+        const hash2 = func2?.astHash ?? '';
+        const similarity = calculateSimilarity(hash1, hash2);
+
+        if (similarity >= SIMILARITY_THRESHOLD) {
+          nearDuplicates.push({
+            astHash: `fuzzy_${hash1.substring(0, 8)}_${hash2.substring(0, 8)}`,
+            functions: [
+              { name: func1?.name ?? '', filePath: func1?.filePath ?? '', line: func1?.line ?? 0 },
+              { name: func2?.name ?? '', filePath: func2?.filePath ?? '', line: func2?.line ?? 0 },
+            ],
+            similarity,
+          });
+        }
       }
     }
   }

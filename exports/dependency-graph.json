@@ -1,0 +1,40 @@
+{
+  "orphans": [],
+  "circularDependencies": [],
+  "entryPoints": [
+    {
+      "name": "validatePaths",
+      "file": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/crawler.ts"
+    },
+    {
+      "name": "extractFunctionCalls",
+      "file": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/dependencies.ts"
+    },
+    {
+      "name": "generateMermaidDiagram",
+      "file": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/dependencies.ts"
+    },
+    {
+      "name": "generateDOTGraph",
+      "file": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/dependencies.ts"
+    },
+    {
+      "name": "resetProject",
+      "file": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/core/parser.ts"
+    },
+    {
+      "name": "mergeConfig",
+      "file": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/utils/config.ts"
+    },
+    {
+      "name": "getPathsFromConfig",
+      "file": "/Users/bernardwiesner/Documents/dev/personal/code-atlas/src/utils/config.ts"
+    }
+  ],
+  "stats": {
+    "totalFunctions": 23,
+    "orphanedFunctions": 0,
+    "circularDependencies": 0,
+    "entryPoints": 7
+  }
+}

@@ -78,6 +78,13 @@ export interface Registry {
   
   /** Detected duplicate function groups */
   duplicates: DuplicateGroup[];
+  
+  /** Dependency graph data (optional) */
+  dependencies?: {
+    orphanCount: number;
+    circularCount: number;
+    avgDependencies: number;
+  };
 }
 
 /**
@@ -126,6 +133,9 @@ export interface ScanOptions {
   
   /** Include Git metadata (author, dates, churn) */
   includeGit?: boolean;
+  
+  /** Disable caching for fresh parse */
+  noCache?: boolean;
 }
 
 /**
