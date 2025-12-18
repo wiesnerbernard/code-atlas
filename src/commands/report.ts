@@ -7,6 +7,7 @@ import { dirname } from 'path';
 import chalk from 'chalk';
 import { loadRegistry } from '../core/registry.js';
 import { logger } from '../utils/logger.js';
+import type { Registry } from '../types/index.js';
 
 export interface ReportOptions {
   /** Output path for HTML report */
@@ -54,11 +55,11 @@ export async function reportCommand(options: ReportOptions): Promise<void> {
 /**
  * Generates HTML report content
  */
-function generateHTML(registry: any): string {
+function generateHTML(registry: Registry): string {
   const cwd = process.cwd() + '/';
   
   // Replace absolute paths with relative paths
-  const functionsWithRelativePaths = registry.functions.map((func: any) => ({
+  const functionsWithRelativePaths = registry.functions.map((func) => ({
     ...func,
     filePath: func.filePath.startsWith(cwd) ? './' + func.filePath.slice(cwd.length) : func.filePath
   }));

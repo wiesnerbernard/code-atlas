@@ -96,11 +96,15 @@ export async function watchCommand(
       });
 
     // Handle graceful shutdown
-    process.on('SIGINT', async () => {
+    const handleShutdown = async (): Promise<void> => {
       logger.info(chalk.yellow('\n\n👋 Stopping watch mode...'));
       await watcher.close();
       logger.success('Watch mode stopped');
       process.exit(0);
+    };
+    
+    process.on('SIGINT', () => {
+      void handleShutdown();
     });
 
     // Keep process alive

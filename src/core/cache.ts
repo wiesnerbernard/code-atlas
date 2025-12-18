@@ -60,7 +60,7 @@ export async function saveCache(cache: Cache): Promise<void> {
     };
     
     await writeFile(CACHE_PATH, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (error) {
+  } catch {
     // Silent fail - cache is optional
   }
 }

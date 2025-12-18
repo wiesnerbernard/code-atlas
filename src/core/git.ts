@@ -97,7 +97,7 @@ export async function getGitBlame(
       lastCommit,
       ...stats,
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }

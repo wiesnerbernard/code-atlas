@@ -65,7 +65,7 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
       try {
         const sourceFile = project.addSourceFileAtPath(filePath);
         sourceFiles.set(filePath, sourceFile);
-      } catch (error) {
+      } catch {
         logger.warn(`Failed to load ${filePath}`);
       }
     }
