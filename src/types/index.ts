@@ -123,6 +123,9 @@ export interface ScanOptions {
   
   /** Maximum cyclomatic complexity threshold */
   maxComplexity?: number;
+  
+  /** Disable caching for fresh parse */
+  noCache?: boolean;
 }
 
 /**

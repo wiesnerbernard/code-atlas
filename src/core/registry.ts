@@ -129,7 +129,7 @@ function detectDuplicates(functions: FunctionMetadata[]): DuplicateGroup[] {
     hashMap.set(func.astHash, existing);
   }
 
-  // Find groups with multiple functions
+  // Find groups with multiple functions (exact matches)
   const duplicates: DuplicateGroup[] = [];
 
   for (const [astHash, group] of hashMap.entries()) {
@@ -141,12 +141,130 @@ function detectDuplicates(functions: FunctionMetadata[]): DuplicateGroup[] {
           filePath: f.filePath,
           line: f.line,
         })),
-        similarity: 1.0, // Exact match for now
+        similarity: 1.0, // Exact match
       });
     }
   }
 
+  // Find near-duplicates using fuzzy matching
+  const nearDuplicates = findNearDuplicates(functions);
+  duplicates.push(...nearDuplicates);
+
   return duplicates;
+}
+
+/**
+ * Finds near-duplicate functions using optimized hash-based pre-filtering
+ * 
+ * Only compares functions with similar hash prefixes to reduce O(n²) comparisons.
+ * 
+ * @param functions - Array of function metadata
+ * @returns Array of near-duplicate groups
+ */
+function findNearDuplicates(functions: FunctionMetadata[]): DuplicateGroup[] {
+  const nearDuplicates: DuplicateGroup[] = [];
+  const SIMILARITY_THRESHOLD = 0.85; // 85% similar
+  const HASH_PREFIX_LENGTH = 8; // Compare first 8 chars of hash
+
+  // Group functions by hash prefix for faster comparison
+  const hashPrefixMap = new Map<string, FunctionMetadata[]>();
+  
+  for (const func of functions) {
+    const prefix = func.astHash.substring(0, HASH_PREFIX_LENGTH);
+    const existing = hashPrefixMap.get(prefix) ?? [];
+    existing.push(func);
+    hashPrefixMap.set(prefix, existing);
+  }
+
+  // Only compare functions within same hash prefix groups
+  for (const group of hashPrefixMap.values()) {
+    if (group.length < 2) continue;
+
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        const func1 = group[i];
+        const func2 = group[j];
+
+        // Skip if already in exact match group
+        if (func1?.astHash === func2?.astHash) continue;
+
+        // Calculate similarity using Levenshtein distance
+        const hash1 = func1?.astHash ?? '';
+        const hash2 = func2?.astHash ?? '';
+        const similarity = calculateSimilarity(hash1, hash2);
+
+        if (similarity >= SIMILARITY_THRESHOLD) {
+          nearDuplicates.push({
+            astHash: `fuzzy_${hash1.substring(0, 8)}_${hash2.substring(0, 8)}`,
+            functions: [
+              { name: func1?.name ?? '', filePath: func1?.filePath ?? '', line: func1?.line ?? 0 },
+              { name: func2?.name ?? '', filePath: func2?.filePath ?? '', line: func2?.line ?? 0 },
+            ],
+            similarity,
+          });
+        }
+      }
+    }
+  }
+
+  return nearDuplicates;
+}
+
+/**
+ * Calculates similarity between two strings using Levenshtein distance
+ * 
+ * @param str1 - First string
+ * @param str2 - Second string
+ * @returns Similarity score (0.0 to 1.0)
+ */
+function calculateSimilarity(str1: string, str2: string): number {
+  const longer = str1.length > str2.length ? str1 : str2;
+  const shorter = str1.length > str2.length ? str2 : str1;
+
+  if (longer.length === 0) return 1.0;
+
+  const distance = levenshteinDistance(longer, shorter);
+  return (longer.length - distance) / longer.length;
+}
+
+/**
+ * Calculates Levenshtein distance between two strings
+ * 
+ * @param str1 - First string
+ * @param str2 - Second string
+ * @returns Edit distance
+ */
+function levenshteinDistance(str1: string, str2: string): number {
+  const matrix: number[][] = [];
+
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= str1.length; j++) {
+    if (matrix[0]) matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2[i - 1] === str1[j - 1]) {
+        const prevDiag = matrix[i - 1]?.[j - 1];
+        if (prevDiag !== undefined && matrix[i]) {
+          matrix[i]![j] = prevDiag;
+        }
+      } else {
+        const prevDiag = matrix[i - 1]?.[j - 1];
+        const prevRow = matrix[i - 1]?.[j];
+        const prevCol = matrix[i]?.[j - 1];
+        
+        if (prevDiag !== undefined && prevRow !== undefined && prevCol !== undefined && matrix[i]) {
+          matrix[i]![j] = Math.min(prevDiag + 1, prevRow + 1, prevCol + 1);
+        }
+      }
+    }
+  }
+
+  return matrix[str2.length]?.[str1.length] ?? 0;
 }
 
 /**

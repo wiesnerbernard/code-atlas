@@ -1,6 +1,6 @@
 {
   "name": "@bernardwiesner/code-atlas",
-  "version": "0.1.1",
+  "version": "0.3.0",
   "description": "CLI tool to scan and index utility functions in codebases",
   "main": "dist/index.js",
   "type": "module",
@@ -11,6 +11,10 @@
     "build": "tsc",
     "dev": "tsx src/cli.ts",
     "start": "node dist/cli.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -42,6 +46,8 @@
   },
   "dependencies": {
     "chalk": "^5.3.0",
+    "chokidar": "^5.0.0",
+    "cli-progress": "^3.12.0",
     "cli-table3": "^0.6.5",
     "commander": "^12.1.0",
     "fast-glob": "^3.3.2",
@@ -49,12 +55,15 @@
     "ts-morph": "^24.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/cli-progress": "^3.11.6",
+    "@types/node": "^22.19.3",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
+    "@vitest/ui": "^4.0.16",
     "eslint": "^9.17.0",
     "prettier": "^3.4.2",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.16"
   }
 }

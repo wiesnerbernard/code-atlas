@@ -58,7 +58,7 @@ export function extractMetadata(sourceFile: SourceFile): FunctionMetadata[] {
  * @param sourceFile - Parent source file
  * @returns Function metadata or null if extraction fails
  */
-function extractFunctionMetadata(
+export function extractFunctionMetadata(
   func: FunctionDeclaration,
   sourceFile: SourceFile
 ): FunctionMetadata | null {
@@ -190,8 +190,62 @@ function calculateComplexity(func: FunctionDeclaration): number {
  * @returns SHA256 hash of AST structure
  */
 function generateASTHash(func: FunctionDeclaration): string {
-  // Simplified: hash the function text for now
-  // TODO: Implement proper AST normalization
-  const text = func.getText();
-  return createHash('sha256').update(text).digest('hex');
+  const normalized = normalizeAST(func);
+  return createHash('sha256').update(normalized).digest('hex');
+}
+
+/**
+ * Normalizes AST structure for duplicate detection
+ * 
+ * Removes variable/parameter names, whitespace, and comments
+ * to identify structurally similar functions.
+ * 
+ * @param func - Function declaration
+ * @returns Normalized AST string representation
+ */
+function normalizeAST(func: FunctionDeclaration): string {
+  const body = func.getBody();
+  if (!body) return '';
+
+  let normalized = body.getText();
+
+  // Replace all identifiers with placeholders
+  const identifierMap = new Map<string, string>();
+
+  // Get function parameters
+  const params = func.getParameters();
+  params.forEach((param, i) => {
+    const name = param.getName();
+    identifierMap.set(name, `_param${i}`);
+  });
+
+  // Replace parameter names in body
+  identifierMap.forEach((placeholder, original) => {
+    const regex = new RegExp(`\\b${escapeRegex(original)}\\b`, 'g');
+    normalized = normalized.replace(regex, placeholder);
+  });
+
+  // Remove all comments
+  normalized = normalized.replace(/\/\*[\s\S]*?\*\//g, '');
+  normalized = normalized.replace(/\/\/.*/g, '');
+
+  // Normalize whitespace
+  normalized = normalized.replace(/\s+/g, ' ').trim();
+
+  // Remove string literal content (keep quotes)
+  normalized = normalized.replace(/"[^"]*"/g, '""');
+  normalized = normalized.replace(/'[^']*'/g, "''");
+  normalized = normalized.replace(/`[^`]*`/g, '``');
+
+  // Remove number literals (replace with 0)
+  normalized = normalized.replace(/\b\d+\.?\d*\b/g, '0');
+
+  return normalized;
+}
+
+/**
+ * Escapes special regex characters
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
