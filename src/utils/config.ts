@@ -84,9 +84,11 @@ export async function loadConfig(startDir: string = process.cwd()): Promise<Conf
 function findConfigFile(startDir: string): string | null {
   let currentDir = startDir;
   const configFileName = '.code-atlasrc.json';
+  let depth = 0;
+  const maxDepth = 10; // Prevent infinite loops
 
   // Walk up directory tree
-  while (true) {
+  while (depth < maxDepth) {
     const configPath = join(currentDir, configFileName);
 
     if (existsSync(configPath)) {
@@ -101,7 +103,10 @@ function findConfigFile(startDir: string): string | null {
     }
 
     currentDir = parentDir;
+    depth++;
   }
+
+  return null;
 }
 
 /**

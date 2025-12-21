@@ -41,4 +41,16 @@ export const logger = {
       console.log(chalk.gray('→'), message);
     }
   },
+
+  /**
+   * Log a verbose message with additional details
+   */
+  verbose(message: string, details?: Record<string, unknown>): void {
+    if (process.env.VERBOSE) {
+      console.log(chalk.cyan('▸'), message);
+      if (details) {
+        console.log(chalk.gray(JSON.stringify(details, null, 2)));
+      }
+    }
+  },
 };
