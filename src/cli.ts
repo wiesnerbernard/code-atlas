@@ -23,7 +23,7 @@ const program = new Command();
 program
   .name('code-atlas')
   .description('CLI tool to scan and index utility functions in codebases')
-  .version('0.5.1');
+  .version('0.5.2');
 
 // Init command
 program
@@ -90,9 +90,10 @@ program
 program
   .command('stats')
   .description('Display registry statistics')
-  .action(async () => {
+  .option('-f, --format <format>', 'Output format (table, json)', 'table')
+  .action(async (options) => {
     try {
-      await statsCommand();
+      await statsCommand({ format: options.format as 'table' | 'json' });
     } catch (error) {
       logger.error('Stats command failed');
       process.exit(1);

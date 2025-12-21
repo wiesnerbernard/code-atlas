@@ -5,6 +5,15 @@ All notable changes to Code-Atlas will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2025-12-21
+
+### Added
+- **JSON format support for stats command**: `code-atlas stats --format json` now outputs structured data including averageComplexity for CI/CD pipelines
+- Statistics now include average complexity metric in both table and JSON formats
+
+### Fixed
+- CI workflow template now works correctly with `code-atlas stats --format json`
+
 ## [0.5.1] - 2025-12-21
 
 ### Added

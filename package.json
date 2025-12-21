@@ -1,6 +1,6 @@
 {
   "name": "@bernardwiesner/code-atlas",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "CLI tool to scan and index utility functions in codebases",
   "main": "dist/index.js",
   "type": "module",
