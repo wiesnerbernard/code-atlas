@@ -307,7 +307,7 @@ describe('generateMermaidDiagram', () => {
     const diagram = generateMermaidDiagram(graph, 10);
 
     expect(diagram).toContain('```mermaid');
-    expect(diagram).toContain('graph TD');
+    expect(diagram).toContain('graph LR');
     expect(diagram).toContain('helper');
     expect(diagram).toContain('main');
     expect(diagram).toContain('-->');
