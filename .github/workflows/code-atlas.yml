@@ -106,6 +106,14 @@ jobs:
             const fs = require('fs');
             const { execSync } = require('child_process');
             
+            // Verify we have a PR context
+            if (!context.issue || !context.issue.number) {
+              console.log('No PR context available, skipping comment');
+              return;
+            }
+            
+            console.log(`Processing PR #${context.issue.number}`);
+            
             // Changes-only mode: compare base and head branches
             try {
               // Checkout base branch and scan
