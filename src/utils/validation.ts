@@ -54,11 +54,11 @@ export function getTotalOfNumbers(numbers: number[]): number {
 
 // Pair 5: ~80% similar - different default value
 export function getFirstElement<T>(arr: T[]): T | null {
-  return arr.length > 0 ? arr[0] : null;
+  return arr.length > 0 ? (arr[0] as T) : null;
 }
 
-export function firstItem<T>(items: T[]): T | undefined {
-  return items.length > 0 ? items[0] : undefined;
+export function firstItem<T>(items: T[]): T | null {
+  return items.length > 0 ? (items[0] as T) : null;
 }
 
 // Pair 6: ~75% similar - slightly different logic
