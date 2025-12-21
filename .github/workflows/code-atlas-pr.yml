@@ -164,13 +164,14 @@ jobs:
               if (headRegistry.duplicates && headRegistry.duplicates.length > 0) {
                 comment += `### Duplicate Functions\n\n`;
                 headRegistry.duplicates.slice(0, 5).forEach(dup => {
-                  if (dup.function1 && dup.function2) {
-                    comment += `**${dup.function1.name}** (${dup.function1.filePath}:${dup.function1.line}) ↔ **${dup.function2.name}** (${dup.function2.filePath}:${dup.function2.line})\n`;
+                  if (dup.functions && dup.functions.length >= 2) {
+                    const funcs = dup.functions.map(f => `**${f.name}** (${f.filePath}:${f.line})`).join(' ↔ ');
+                    comment += `${funcs}\n`;
                     comment += `- Similarity: ${(dup.similarity * 100).toFixed(1)}%\n\n`;
                   }
                 });
                 if (headRegistry.duplicates.length > 5) {
-                  comment += `*... and ${headRegistry.duplicates.length - 5} more duplicate pairs*\n\n`;
+                  comment += `*... and ${headRegistry.duplicates.length - 5} more duplicate groups*\n\n`;
                 }
               }
               
