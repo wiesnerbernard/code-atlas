@@ -204,3 +204,37 @@ export interface ParseResult {
   /** Error message if parsing failed */
   error?: string;
 }
+
+/**
+ * Result of comparing two registries
+ */
+export interface RegistryDiff {
+  /** Functions added in head (not in base) */
+  added: FunctionMetadata[];
+
+  /** Functions modified in head (different astHash) */
+  modified: ModifiedFunction[];
+
+  /** Functions deleted from base (not in head) */
+  deleted: FunctionMetadata[];
+
+  /** Functions unchanged between base and head */
+  unchanged: FunctionMetadata[];
+}
+
+/**
+ * Metadata for a modified function with before/after details
+ */
+export interface ModifiedFunction {
+  /** Function metadata from base */
+  before: FunctionMetadata;
+
+  /** Function metadata from head */
+  after: FunctionMetadata;
+
+  /** Complexity change (positive = increased, negative = decreased) */
+  complexityDelta: number;
+
+  /** Whether the function signature changed */
+  signatureChanged: boolean;
+}

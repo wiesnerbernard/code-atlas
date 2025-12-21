@@ -15,6 +15,7 @@ import { reportCommand } from './commands/report.js';
 import { graphCommand } from './commands/graph.js';
 import { exportCommand } from './commands/export.js';
 import { initCommand } from './commands/init.js';
+import { diffCommand } from './commands/diff.js';
 import { DEFAULT_REGISTRY_PATH } from './core/registry.js';
 import { logger } from './utils/logger.js';
 
@@ -100,6 +101,28 @@ program
     }
   });
 
+// Diff command
+program
+  .command('diff')
+  .description('Compare two registries to detect function changes')
+  .requiredOption('-b, --base <path>', 'Path to base registry file')
+  .requiredOption('-h, --head <path>', 'Path to head registry file')
+  .option('-o, --output <path>', 'Output file path for diff report')
+  .option('-f, --format <format>', 'Output format (json, markdown, table)', 'table')
+  .action(async (options) => {
+    try {
+      await diffCommand({
+        base: options.base,
+        head: options.head,
+        output: options.output,
+        format: options.format as 'json' | 'markdown' | 'table',
+      });
+    } catch (error) {
+      logger.error('Diff command failed');
+      process.exit(1);
+    }
+  });
+
 // Report command
 program
   .command('report')
@@ -146,6 +169,10 @@ program
   .option('--max-nodes <number>', 'Maximum nodes to include in graph', parseInt, 50)
   .option('--show-orphans', 'Show orphaned functions details', false)
   .option('--show-circular', 'Show circular dependencies details', false)
+  .option('--focus <functions>', 'Focus on specific functions (comma-separated)')
+  .option('--focus-depth <depth>', 'Depth for focused graph', parseInt, 1)
+  .option('--highlight-added <functions>', 'Highlight added functions (comma-separated)')
+  .option('--highlight-modified <functions>', 'Highlight modified functions (comma-separated)')
   .action(async (options) => {
     try {
       await graphCommand({
@@ -154,6 +181,10 @@ program
         maxNodes: options.maxNodes,
         showOrphans: options.showOrphans,
         showCircular: options.showCircular,
+        focus: options.focus,
+        focusDepth: options.focusDepth,
+        highlightAdded: options.highlightAdded,
+        highlightModified: options.highlightModified,
       });
     } catch (error) {
       logger.error('Graph command failed');

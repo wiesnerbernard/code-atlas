@@ -197,7 +197,7 @@ function detectCircularDependencies(nodes: Map<string, DependencyNode>): string[
 export function generateMermaidDiagram(graph: DependencyGraph, maxNodes = 50): string {
   const lines: string[] = [];
   lines.push('```mermaid');
-  lines.push('graph TD');
+  lines.push('graph LR');
 
   // Limit nodes to most connected ones
   const sortedNodes = Array.from(graph.nodes.values())
@@ -289,5 +289,142 @@ export function generateDOTGraph(graph: DependencyGraph, maxNodes = 50): string 
   }
 
   lines.push('}');
+  return lines.join('\n');
+}
+
+/**
+ * Build a focused subgraph containing only specified functions and their neighbors
+ *
+ * @param graph - Complete dependency graph
+ * @param focusFunctions - Function names to focus on
+ * @param depth - How many hops to include (default: 1)
+ * @returns Filtered dependency graph
+ */
+export function buildImpactSubgraph(
+  graph: DependencyGraph,
+  focusFunctions: string[],
+  depth = 1
+): DependencyGraph {
+  const relevantNodes = new Set<string>();
+  const queue: Array<{ name: string; currentDepth: number }> = [];
+
+  // Initialize queue with focus functions
+  for (const name of focusFunctions) {
+    if (graph.nodes.has(name)) {
+      queue.push({ name, currentDepth: 0 });
+      relevantNodes.add(name);
+    }
+  }
+
+  // BFS to find neighbors up to specified depth
+  while (queue.length > 0) {
+    const { name, currentDepth } = queue.shift()!;
+
+    if (currentDepth >= depth) continue;
+
+    const node = graph.nodes.get(name);
+    if (!node) continue;
+
+    // Add callers (upstream - who's affected by changes)
+    for (const caller of node.calledBy) {
+      if (!relevantNodes.has(caller)) {
+        relevantNodes.add(caller);
+        queue.push({ name: caller, currentDepth: currentDepth + 1 });
+      }
+    }
+
+    // Add callees (downstream - what this depends on)
+    for (const call of node.calls) {
+      if (!relevantNodes.has(call.callee)) {
+        relevantNodes.add(call.callee);
+        queue.push({ name: call.callee, currentDepth: currentDepth + 1 });
+      }
+    }
+  }
+
+  // Build filtered graph
+  const filteredNodes = new Map<string, DependencyNode>();
+  for (const name of relevantNodes) {
+    const node = graph.nodes.get(name);
+    if (node) {
+      // Filter calls and calledBy to only include nodes in the subgraph
+      filteredNodes.set(name, {
+        ...node,
+        calls: node.calls.filter((call) => relevantNodes.has(call.callee)),
+        calledBy: node.calledBy.filter((caller) => relevantNodes.has(caller)),
+      });
+    }
+  }
+
+  // Recalculate orphans and entry points for subgraph
+  const orphans = Array.from(filteredNodes.values()).filter(
+    (node) => node.calledBy.length === 0 && !node.function.isExported
+  );
+
+  const entryPoints = Array.from(filteredNodes.values()).filter(
+    (node) => node.function.isExported && node.calls.length === 0
+  );
+
+  return {
+    nodes: filteredNodes,
+    orphans,
+    entryPoints,
+    circularDependencies: [], // Not recalculated for subgraphs
+  };
+}
+
+/**
+ * Generate a Mermaid diagram highlighting changed functions
+ *
+ * @param graph - Dependency graph (usually a subgraph)
+ * @param changedFunctions - Set of function names that changed
+ * @param addedFunctions - Set of function names that were added
+ * @returns Mermaid diagram string with highlighting
+ */
+export function generateHighlightedMermaidDiagram(
+  graph: DependencyGraph,
+  changedFunctions: Set<string>,
+  addedFunctions: Set<string>
+): string {
+  const lines: string[] = [];
+  lines.push('```mermaid');
+  lines.push('graph LR');
+
+  const nodes = Array.from(graph.nodes.values());
+
+  // Add nodes with appropriate styling
+  for (const node of nodes) {
+    const name = node.function.name;
+    const safeName = name.replace(/[^a-zA-Z0-9_]/g, '_');
+
+    let style = '';
+    if (addedFunctions.has(name)) {
+      style = ':::added';
+    } else if (changedFunctions.has(name)) {
+      style = ':::modified';
+    } else if (node.function.isExported) {
+      style = ':::exported';
+    }
+
+    lines.push(`  ${safeName}["${name}"]${style}`);
+  }
+
+  // Add edges
+  for (const node of nodes) {
+    const from = node.function.name.replace(/[^a-zA-Z0-9_]/g, '_');
+
+    for (const call of node.calls) {
+      const to = call.callee.replace(/[^a-zA-Z0-9_]/g, '_');
+      lines.push(`  ${from} --> ${to}`);
+    }
+  }
+
+  // Add styling
+  lines.push('');
+  lines.push('  classDef added fill:#4ade80,stroke:#16a34a,stroke-width:3px,color:#000');
+  lines.push('  classDef modified fill:#fbbf24,stroke:#f59e0b,stroke-width:3px,color:#000');
+  lines.push('  classDef exported fill:#60a5fa,stroke:#3b82f6,stroke-width:2px,color:#000');
+  lines.push('```');
+
   return lines.join('\n');
 }
