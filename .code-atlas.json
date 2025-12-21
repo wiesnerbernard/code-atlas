@@ -7,5 +7,6 @@
     "coverage",
     ".git"
   ],
-  "includeTests": false
+  "includeTests": false,
+  "prCommentMode": "changes-only"
 }

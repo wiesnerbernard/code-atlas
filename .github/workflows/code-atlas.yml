@@ -89,33 +89,100 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+            const { execSync } = require('child_process');
             
-            // Read stats
-            const stats = fs.readFileSync('stats.txt', 'utf8');
-            const statsJson = JSON.parse(fs.readFileSync('stats.json', 'utf8'));
-            
-            // Build comment
-            let comment = `## 📊 Code Atlas Analysis\n\n`;
-            comment += `\`\`\`\n${stats}\`\`\`\n\n`;
-            
-            // Add warnings if thresholds exceeded
-            if (statsJson.averageComplexity > 10) {
-              comment += `⚠️ **Warning**: Average complexity (${statsJson.averageComplexity.toFixed(2)}) exceeds threshold (10)\n\n`;
+            // Changes-only mode: compare base and head branches
+            try {
+              // Checkout base branch and scan
+              execSync('git fetch origin ${{ github.base_ref }}');
+              execSync('git checkout origin/${{ github.base_ref }}');
+              execSync('code-atlas scan --include-git --output base-registry.json');
+              
+              // Checkout PR branch and scan
+              execSync('git checkout ${{ github.sha }}');
+              execSync('code-atlas scan --include-git --output head-registry.json');
+              
+              // Generate diff
+              execSync('code-atlas diff --base base-registry.json --head head-registry.json --format json --output pr-diff.json');
+              
+              // Check if there are changes
+              if (!fs.existsSync('pr-diff.json')) {
+                console.log('No function changes detected, skipping comment');
+                return;
+              }
+              
+              const diffContent = fs.readFileSync('pr-diff.json', 'utf8');
+              const diff = JSON.parse(diffContent);
+              const summary = diff.summary;
+              
+              if (summary.added === 0 && summary.modified === 0 && summary.deleted === 0) {
+                console.log('No function changes detected, skipping comment');
+                return;
+              }
+              
+              // Build comment with change summary
+              let comment = `## Code Atlas: Function Changes\n\n`;
+              comment += `### Summary\n\n`;
+              comment += `- **Added:** ${summary.added} functions\n`;
+              comment += `- **Modified:** ${summary.modified} functions\n`;
+              comment += `- **Deleted:** ${summary.deleted} functions\n\n`;
+              
+              if (summary.complexityIncreases > 0) {
+                comment += `**Warning:** ${summary.complexityIncreases} functions increased in complexity\n\n`;
+              }
+              
+              if (summary.signatureChanges > 0) {
+                comment += `**Warning:** ${summary.signatureChanges} functions changed signatures\n\n`;
+              }
+              
+              // Add top modified functions
+              if (diff.modified && diff.modified.length > 0) {
+                comment += `### Modified Functions\n\n`;
+                comment += `| Function | File | Complexity | Change |\n`;
+                comment += `|----------|------|------------|--------|\n`;
+                diff.modified.slice(0, 10).forEach(m => {
+                  const delta = m.complexityDelta > 0 ? `+${m.complexityDelta}` : m.complexityDelta < 0 ? `${m.complexityDelta}` : '0';
+                  const warning = m.complexityDelta > 5 ? ' ⚠️' : '';
+                  comment += `| \`${m.name}\` | ${m.filePath} | ${m.complexityBefore} → ${m.complexityAfter} | ${delta}${warning} |\n`;
+                });
+                if (diff.modified.length > 10) {
+                  comment += `\n*... and ${diff.modified.length - 10} more*\n`;
+                }
+                comment += `\n`;
+              }
+              
+              // Add top added functions
+              if (diff.added && diff.added.length > 0) {
+                comment += `### Added Functions\n\n`;
+                comment += `| Function | File | Complexity |\n`;
+                comment += `|----------|------|------------|\n`;
+                diff.added.slice(0, 10).forEach(fn => {
+                  comment += `| \`${fn.name}\` | ${fn.filePath} | ${fn.complexity} |\n`;
+                });
+                if (diff.added.length > 10) {
+                  comment += `\n*... and ${diff.added.length - 10} more*\n`;
+                }
+                comment += `\n`;
+              }
+              
+              comment += `\n📦 [View detailed reports](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})\n`;
+              
+              // Post comment
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+              
+            } catch (error) {
+              console.error('Error in changes-only mode:', error);
+              // Fall back to basic comment
+              const stats = fs.readFileSync('stats.txt', 'utf8');
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## Code Atlas Analysis\n\n\`\`\`\n${stats}\`\`\``
+              });
             }
-            // Add mermaid diagram
-            if (fs.existsSync('dependency-graph.md')) {
-              const diagram = fs.readFileSync('dependency-graph.md', 'utf8');
-              comment += `### 🔗 Dependency Graph\n\n`;
-              comment += diagram + `\n\n`;
-            }
-            
-            // Add artifact link
-            comment += `📦 [View detailed reports in artifacts](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})\n`;
-            
-            // Post comment
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
