@@ -244,9 +244,9 @@ ${
 `
     : ''
 }              
-              comment += \`\\n📦 [View detailed reports](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\\n\`;
+              comment += \`\\n[View detailed reports](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\\n\`;
               comment += \`---\\n\`;
-              comment += \`💡 **Re-run this analysis:** Add the \\\`run-analysis\\\` label or use the [Actions tab](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/workflows/code-atlas.yml) to manually trigger.\\n\`;
+              comment += \`**Re-run this analysis:** Add the \\\`run-analysis\\\` label or use the [Actions tab](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/workflows/code-atlas.yml) to manually trigger.\\n\`;
               
               // Post comment
               await github.rest.issues.createComment({
@@ -307,9 +307,9 @@ ${
 `
           : ''
       }            
-            comment += \`📦 [View detailed reports](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\\n\`;
+            comment += \`[View detailed reports](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\\n\`;
             comment += \`---\\n\`;
-            comment += \`💡 **Re-run this analysis:** Add the \\\`run-analysis\\\` label or use the [Actions tab](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/workflows/code-atlas.yml) to manually trigger.\\n\`;
+            comment += \`**Re-run this analysis:** Add the \\\`run-analysis\\\` label or use the [Actions tab](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/workflows/code-atlas.yml) to manually trigger.\\n\`;
             
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
