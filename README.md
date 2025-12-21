@@ -3,7 +3,7 @@
 [![CI](https://github.com/wiesnerbernard/code-atlas/actions/workflows/ci.yml/badge.svg)](https://github.com/wiesnerbernard/code-atlas/actions/workflows/ci.yml)
 [![npm version](https://badge.fury.io/js/@bernardwiesner%2Fcode-atlas.svg)](https://www.npmjs.com/package/@bernardwiesner/code-atlas)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
+> 🧙 **Test PR**: Testing automated PR comment functionality
 > **Stop duplicating utilities. Start discovering them.**
 
 Code-Atlas is a CLI tool that scans your codebase, analyzes the AST (Abstract Syntax Tree), and builds a searchable local registry of utility functions. Say goodbye to "utility rot" where developers duplicate functions because they don't know they already exist.
