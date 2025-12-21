@@ -139,3 +139,11 @@ build/
 *.swp
 *.swo
 *~
+
+
+# Code-Atlas outputs
+.code-atlas/
+registry.json
+code-atlas-report.html
+dependency-graph.*
+deps.json
