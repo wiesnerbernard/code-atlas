@@ -19,6 +19,7 @@ interface SetupConfig {
   generateReport: boolean;
   includeTests: boolean;
   customIgnorePatterns: string[];
+  prCommentMode: 'full' | 'changes-only';
 }
 
 const GITHUB_ACTIONS_TEMPLATE = (config: SetupConfig): string => `name: Code Atlas Analysis
@@ -145,59 +146,166 @@ ${config.generateReport ? '            code-atlas-report.html\n' : ''}${config.g
         with:
           script: |
             const fs = require('fs');
-            
-            // Read stats
+            const { execSync } = require('child_process');
+${
+  config.prCommentMode === 'changes-only'
+    ? `            
+            // Changes-only mode: compare base and head branches
+            try {
+              // Checkout base branch and scan
+              execSync('git fetch origin \${{ github.base_ref }}');
+              execSync('git checkout origin/\${{ github.base_ref }}');
+              execSync('code-atlas scan${config.enableGitMetadata ? ' --include-git' : ''}${config.includeTests ? ' --include-tests' : ''} --output base-registry.json');
+              
+              // Checkout PR branch and scan
+              execSync('git checkout \${{ github.sha }}');
+              execSync('code-atlas scan${config.enableGitMetadata ? ' --include-git' : ''}${config.includeTests ? ' --include-tests' : ''} --output head-registry.json');
+              
+              // Generate diff
+              execSync('code-atlas diff --base base-registry.json --head head-registry.json --format json --output pr-diff.json');
+              
+              // Check if there are changes
+              if (!fs.existsSync('pr-diff.json')) {
+                console.log('No function changes detected, skipping comment');
+                return;
+              }
+              
+              const diff = JSON.parse(fs.readFileSync('pr-diff.json', 'utf8'));
+              const summary = diff.summary;
+              
+              if (summary.added === 0 && summary.modified === 0 && summary.deleted === 0) {
+                console.log('No function changes detected, skipping comment');
+                return;
+              }
+              
+              // Build comment with change summary
+              let comment = \`## Code Atlas: Function Changes\\n\\n\`;
+              comment += \`### Summary\\n\\n\`;
+              comment += \`- **Added:** \${summary.added} functions\\n\`;
+              comment += \`- **Modified:** \${summary.modified} functions\\n\`;
+              comment += \`- **Deleted:** \${summary.deleted} functions\\n\\n\`;
+              
+              if (summary.complexityIncreases > 0) {
+                comment += \`**Warning:** \${summary.complexityIncreases} functions increased in complexity\\n\\n\`;
+              }
+              
+              if (summary.signatureChanges > 0) {
+                comment += \`**Warning:** \${summary.signatureChanges} functions changed signatures\\n\\n\`;
+              }
+              
+              // Add top modified functions
+              if (diff.modified && diff.modified.length > 0) {
+                comment += \`### Modified Functions\\n\\n\`;
+                comment += \`| Function | File | Complexity | Change |\\n\`;
+                comment += \`|----------|------|------------|--------|\\n\`;
+                diff.modified.slice(0, 10).forEach(m => {
+                  const delta = m.complexityDelta > 0 ? \`+\${m.complexityDelta}\` : m.complexityDelta < 0 ? \`\${m.complexityDelta}\` : '0';
+                  const warning = m.complexityDelta > 5 ? ' ⚠️' : '';
+                  comment += \`| \\\`\${m.name}\\\` | \${m.filePath} | \${m.complexityBefore} → \${m.complexityAfter} | \${delta}\${warning} |\\n\`;
+                });
+                if (diff.modified.length > 10) {
+                  comment += \`\\n*... and \${diff.modified.length - 10} more*\\n\`;
+                }
+                comment += \`\\n\`;
+              }
+${
+  config.graphFormats.includes('mermaid')
+    ? `              
+              // Generate focused impact graph
+              const changedFunctions = [
+                ...diff.added.map(f => f.name),
+                ...diff.modified.map(m => m.name)
+              ];
+              
+              if (changedFunctions.length > 0 && changedFunctions.length < 20) {
+                try {
+                  // Generate focused graph showing only changed functions and their immediate neighbors
+                  execSync(\`code-atlas graph --focus "\${changedFunctions.join(',')}" --format mermaid --output focused-graph.md\`);
+                  
+                  if (fs.existsSync('focused-graph.md')) {
+                    const diagram = fs.readFileSync('focused-graph.md', 'utf8');
+                    comment += \`### Impact Graph\\n\\n\`;
+                    comment += \`Showing changed functions and their immediate dependencies:\\n\\n\`;
+                    comment += diagram + \`\\n\\n\`;
+                  }
+                } catch (e) {
+                  console.log('Failed to generate focused graph:', e.message);
+                }
+              }
+`
+    : ''
+}              
+              comment += \`\\n📦 [View detailed reports](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\`;
+              
+              // Post comment
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+              
+            } catch (error) {
+              console.error('Error in changes-only mode:', error);
+              // Fall back to basic comment
+              const stats = fs.readFileSync('stats.txt', 'utf8');
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: \`## Code Atlas Analysis\\n\\n\\\`\\\`\\\`\\n\${stats}\\\`\\\`\\\`\`
+              });
+            }
+`
+    : `            
+            // Full mode: show complete analysis
             const stats = fs.readFileSync('stats.txt', 'utf8');
             const statsJson = JSON.parse(fs.readFileSync('stats.json', 'utf8'));
             
-            // Build comment
-            let comment = \`## 📊 Code Atlas Analysis\\n\\n\`;
+            let comment = \`## Code Atlas Analysis\\n\\n\`;
             comment += \`\\\`\\\`\\\`\\n\${stats}\\\`\\\`\\\`\\n\\n\`;
             
-            // Add warnings if thresholds exceeded
 ${
   config.complexityThreshold
     ? `            if (statsJson.averageComplexity > ${config.complexityThreshold}) {
-              comment += \`⚠️ **Warning**: Average complexity (\${statsJson.averageComplexity.toFixed(2)}) exceeds threshold (${config.complexityThreshold})\\n\\n\`;
+              comment += \`**Warning**: Average complexity (\${statsJson.averageComplexity.toFixed(2)}) exceeds threshold (${config.complexityThreshold})\\n\\n\`;
             }
 `
     : ''
 }${
-  config.failOnCircularDeps
-    ? `            // Check for circular dependencies
-            if (fs.existsSync('deps.json')) {
+        config.failOnCircularDeps
+          ? `            if (fs.existsSync('deps.json')) {
               const deps = JSON.parse(fs.readFileSync('deps.json', 'utf8'));
               const circularNodes = deps.nodes.filter(n => n.circular);
               if (circularNodes.length > 0) {
-                comment += \`🔄 **Circular Dependencies**: \${circularNodes.length} detected\\n\`;
+                comment += \`**Circular Dependencies**: \${circularNodes.length} detected\\n\`;
                 comment += circularNodes.slice(0, 5).map(n => \`  - \${n.id}\`).join('\\n');
                 if (circularNodes.length > 5) comment += \`\\n  - ... and \${circularNodes.length - 5} more\`;
                 comment += \`\\n\\n\`;
               }
             }
 `
-    : ''
-}${
-  config.graphFormats.includes('mermaid')
-    ? `            // Add mermaid diagram
-            if (fs.existsSync('dependency-graph.md')) {
+          : ''
+      }${
+        config.graphFormats.includes('mermaid')
+          ? `            if (fs.existsSync('dependency-graph.md')) {
               const diagram = fs.readFileSync('dependency-graph.md', 'utf8');
-              comment += \`### 🔗 Dependency Graph\\n\\n\`;
+              comment += \`### Dependency Graph\\n\\n\`;
               comment += diagram + \`\\n\\n\`;
             }
 `
-    : ''
-}            
-            // Add artifact link
-            comment += \`📦 [View detailed reports in artifacts](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\`;
+          : ''
+      }            
+            comment += \`📦 [View detailed reports](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\`;
             
-            // Post comment
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: comment
             });
+`
+}
 `;
 
 const GITLAB_CI_TEMPLATE = (config: SetupConfig): string => `code-atlas:
@@ -332,7 +440,8 @@ const CONFIG_TEMPLATE = (config: SetupConfig): string => `{
     "coverage",
     ".git"${config.customIgnorePatterns.length > 0 ? ',\n' + config.customIgnorePatterns.map((p) => `    "${p}"`).join(',\n') : ''}
   ],
-  "includeTests": ${config.includeTests}
+  "includeTests": ${config.includeTests},
+  "prCommentMode": "${config.prCommentMode}"
 }
 `;
 
@@ -358,7 +467,29 @@ export async function initCommand(): Promise<void> {
       default: true,
     });
 
-    // Step 3: Quality gates
+    // Step 3: PR comment mode (only for GitHub)
+    let prCommentMode: 'full' | 'changes-only' = 'full';
+    if (ciPlatform === 'github') {
+      prCommentMode = await select({
+        message: 'How should PR comments work?',
+        choices: [
+          {
+            name: 'Show only function changes (recommended)',
+            value: 'changes-only',
+            description:
+              'Only comment when functions are added/modified/deleted, with focused impact graph',
+          },
+          {
+            name: 'Show full analysis',
+            value: 'full',
+            description: 'Always show complete codebase statistics and dependency graph',
+          },
+        ],
+        default: 'changes-only',
+      });
+    }
+
+    // Step 4: Quality gates
     const failOnCircularDeps = await confirm({
       message: 'Fail CI on circular dependencies?',
       default: false,
@@ -397,7 +528,7 @@ export async function initCommand(): Promise<void> {
       default: true,
     });
 
-    // Step 5: Scan options
+    // Step 6: Scan options
     const includeTests = await confirm({
       message: 'Include test files in analysis?',
       default: false,
@@ -428,6 +559,7 @@ export async function initCommand(): Promise<void> {
       generateReport,
       includeTests,
       customIgnorePatterns,
+      prCommentMode,
     };
 
     console.log(chalk.blue('\n📝 Generating files...\n'));

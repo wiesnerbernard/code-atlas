@@ -33,6 +33,9 @@ export interface ConfigFile {
 
   /** Paths to scan (default: ['./src']) */
   paths?: string[];
+
+  /** PR comment mode: 'full' shows all functions, 'changes-only' shows only changed functions */
+  prCommentMode?: 'full' | 'changes-only';
 }
 
 /**

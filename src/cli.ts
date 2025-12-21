@@ -15,6 +15,7 @@ import { reportCommand } from './commands/report.js';
 import { graphCommand } from './commands/graph.js';
 import { exportCommand } from './commands/export.js';
 import { initCommand } from './commands/init.js';
+import { diffCommand } from './commands/diff.js';
 import { DEFAULT_REGISTRY_PATH } from './core/registry.js';
 import { logger } from './utils/logger.js';
 
@@ -96,6 +97,28 @@ program
       await statsCommand({ format: options.format as 'table' | 'json' });
     } catch (error) {
       logger.error('Stats command failed');
+      process.exit(1);
+    }
+  });
+
+// Diff command
+program
+  .command('diff')
+  .description('Compare two registries to detect function changes')
+  .requiredOption('-b, --base <path>', 'Path to base registry file')
+  .requiredOption('-h, --head <path>', 'Path to head registry file')
+  .option('-o, --output <path>', 'Output file path for diff report')
+  .option('-f, --format <format>', 'Output format (json, markdown, table)', 'table')
+  .action(async (options) => {
+    try {
+      await diffCommand({
+        base: options.base,
+        head: options.head,
+        output: options.output,
+        format: options.format as 'json' | 'markdown' | 'table',
+      });
+    } catch (error) {
+      logger.error('Diff command failed');
       process.exit(1);
     }
   });
