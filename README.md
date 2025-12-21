@@ -81,6 +81,33 @@ code-atlas scan ./src --include-git
 code-atlas scan ./src --no-cache
 ```
 
+### Configuration File
+
+Create a `.code-atlasrc.json` file in your project root to configure default settings:
+
+```json
+{
+  "paths": ["./src"],
+  "ignore": [
+    "**/legacy/**",
+    "**/vendor/**",
+    "**/__mocks__/**"
+  ],
+  "includeTests": false,
+  "maxComplexity": 20,
+  "output": ".code-atlas/registry.json"
+}
+```
+
+**Configuration Options:**
+- `paths`: Directories to scan (default: `["./src"]`)
+- `ignore`: Additional glob patterns to ignore (always excludes `node_modules`, `dist`, `build`, `.git`)
+- `includeTests`: Include test files in scan (default: `false`)
+- `maxComplexity`: Maximum cyclomatic complexity threshold
+- `output`: Output file path for registry
+
+**Note:** `node_modules`, `dist`, `build`, `.git`, and `coverage` are **always ignored** and cannot be overridden. The `ignore` option allows you to add additional patterns specific to your project.
+
 ### Export Registry
 Export your function registry in multiple formats:
 
@@ -194,6 +221,18 @@ Code-Atlas identifies "utilities" using heuristics:
 - ✅ Functions with JSDoc annotations
 - ❌ React components, classes, and framework-specific code
 - ❌ Test files (`*.test.ts`, `*.spec.ts`) - unless `--include-tests` is used
+
+## What Gets Ignored?
+
+Code-Atlas **always** excludes these directories (cannot be overridden):
+- `node_modules/` - Third-party dependencies
+- `dist/`, `build/` - Build outputs
+- `.git/` - Version control
+- `coverage/` - Test coverage reports
+- Test files - `*.test.*`, `*.spec.*` (unless `--include-tests`)
+- Type definitions - `*.d.ts`
+
+You can add additional ignore patterns via the config file or `--ignore` flag.
 
 ## Use Cases
 

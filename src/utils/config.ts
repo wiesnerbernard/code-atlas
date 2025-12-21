@@ -12,9 +12,14 @@ import { logger } from '../utils/logger.js';
 
 /**
  * Configuration file schema
+ * 
+ * Create a .code-atlasrc.json file in your project root to configure defaults.
+ * 
+ * Note: node_modules, dist, build, .git, and coverage are ALWAYS ignored
+ * and cannot be overridden via configuration.
  */
 export interface ConfigFile {
-  /** Glob patterns to ignore */
+  /** Glob patterns to ignore (in addition to defaults) */
   ignore?: string[];
 
   /** Include test files in scan */

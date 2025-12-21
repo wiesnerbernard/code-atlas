@@ -14,6 +14,7 @@ import { watchCommand } from './commands/watch.js';
 import { reportCommand } from './commands/report.js';
 import { graphCommand } from './commands/graph.js';
 import { exportCommand } from './commands/export.js';
+import { initCommand } from './commands/init.js';
 import { DEFAULT_REGISTRY_PATH } from './core/registry.js';
 import { logger } from './utils/logger.js';
 
@@ -22,7 +23,20 @@ const program = new Command();
 program
   .name('code-atlas')
   .description('CLI tool to scan and index utility functions in codebases')
-  .version('0.3.0');
+  .version('0.5.0');
+
+// Init command
+program
+  .command('init')
+  .description('Interactive setup wizard for code-atlas')
+  .action(async () => {
+    try {
+      await initCommand();
+    } catch (error) {
+      logger.error('Init command failed');
+      process.exit(1);
+    }
+  });
 
 // Scan command
 program

@@ -5,6 +5,34 @@ All notable changes to Code-Atlas will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-12-21
+
+### Added
+
+#### Interactive Setup Wizard
+- New `init` command - Interactive setup wizard to configure code-atlas
+- Automatically generates:
+  - `.code-atlas.json` configuration file
+  - CI/CD workflow files (GitHub Actions, GitLab CI, or CircleCI)
+  - `.gitignore` entries for code-atlas outputs
+- Interactive prompts for:
+  - CI platform selection (GitHub, GitLab, CircleCI, or none)
+  - Git metadata inclusion
+  - Quality gates (circular dependencies, complexity thresholds)
+  - Output formats (Mermaid, DOT, JSON)
+  - HTML report generation
+  - Test file inclusion
+  - Custom ignore patterns
+- Smart file handling with overwrite confirmation
+- Platform-specific CI templates with customized checks
+
+### Fixed
+- CI workflow templates now use `--include-tests` flag correctly (not `--no-include-tests`)
+- Fixed flag handling in all CI platform templates (GitHub Actions, GitLab CI, CircleCI)
+
+### Dependencies
+- Added `@inquirer/prompts` for interactive CLI prompts
+
 ## [0.4.0] - 2025-12-18
 
 ### Added
