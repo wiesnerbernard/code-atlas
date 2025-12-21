@@ -99,20 +99,43 @@ jobs:
             stats.json
       
       - name: Comment on PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const { execSync } = require('child_process');
             
-            // Verify we have a PR context
-            if (!context.issue || !context.issue.number) {
+            // Get PR number - either from context or by finding PR for current branch
+            let prNumber = context.issue?.number;
+            
+            if (!prNumber && github.event_name === 'workflow_dispatch') {
+              // For manual runs, find PR for current branch
+              const branch = context.ref.replace('refs/heads/', '');
+              console.log(`Looking for PR for branch: ${branch}`);
+              
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                head: `${context.repo.owner}:${branch}`
+              });
+              
+              if (prs.length > 0) {
+                prNumber = prs[0].number;
+                console.log(`Found PR #${prNumber} for branch ${branch}`);
+              } else {
+                console.log(`No open PR found for branch ${branch}, skipping comment`);
+                return;
+              }
+            }
+            
+            if (!prNumber) {
               console.log('No PR context available, skipping comment');
               return;
             }
             
-            console.log(`Processing PR #${context.issue.number}`);
+            console.log(`Processing PR #${prNumber}`);
             
             // Changes-only mode: compare base and head branches
             try {
@@ -244,7 +267,7 @@ jobs:
               
               // Post comment
               await github.rest.issues.createComment({
-                issue_number: context.issue.number,
+                issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body: comment
@@ -255,7 +278,7 @@ jobs:
               // Fall back to basic comment
               const stats = fs.readFileSync('stats.txt', 'utf8');
               await github.rest.issues.createComment({
-                issue_number: context.issue.number,
+                issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body: `## Code Atlas Analysis\n\n\`\`\`\n${stats}\`\`\``
