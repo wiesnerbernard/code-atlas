@@ -1,0 +1,223 @@
+name: Code Atlas PR Analysis
+
+on:
+  pull_request:
+    types: [opened, reopened, labeled, synchronize]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  analyze-pr:
+    # Only run on: PR open/reopen, 'run-analysis' label, or manual trigger
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.action == 'opened' ||
+      github.event.action == 'reopened' ||
+      contains(github.event.pull_request.labels.*.name, 'run-analysis')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Link local version
+        run: npm link
+      
+      - name: Analyze PR Changes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { execSync } = require('child_process');
+            
+            console.log(`Event name: ${context.eventName}`);
+            console.log(`Ref: ${context.ref}`);
+            console.log(`Issue number: ${context.issue?.number}`);
+            
+            // Get PR number
+            let prNumber = context.issue?.number;
+            let baseRef = context.payload.pull_request?.base?.ref || 'main';
+            
+            if (!prNumber) {
+              // For manual runs, find PR for current branch
+              const branch = context.ref.replace('refs/heads/', '');
+              console.log(`Looking for PR for branch: ${branch}`);
+              
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                head: `${context.repo.owner}:${branch}`
+              });
+              
+              if (prs.length > 0) {
+                prNumber = prs[0].number;
+                baseRef = prs[0].base.ref;
+                console.log(`Found PR #${prNumber} for branch ${branch}, base: ${baseRef}`);
+              } else {
+                console.log(`No open PR found for branch ${branch}`);
+                return;
+              }
+            }
+            
+            if (!prNumber) {
+              console.log('No PR context available');
+              return;
+            }
+            
+            console.log(`Analyzing PR #${prNumber}`);
+            
+            try {
+              // Scan base branch
+              execSync(`git fetch origin ${baseRef}`);
+              execSync(`git checkout origin/${baseRef}`);
+              execSync('code-atlas scan --include-git --output base-registry.json');
+              
+              // Scan PR branch
+              execSync(`git checkout ${context.sha}`);
+              execSync('code-atlas scan --include-git --output head-registry.json');
+              
+              // Generate diff
+              execSync('code-atlas diff --base base-registry.json --head head-registry.json --format json --output pr-diff.json');
+              
+              // Check if there are changes
+              if (!fs.existsSync('pr-diff.json')) {
+                console.log('No function changes detected');
+                return;
+              }
+              
+              const diff = JSON.parse(fs.readFileSync('pr-diff.json', 'utf8'));
+              const summary = diff.summary;
+              
+              if (summary.added === 0 && summary.modified === 0 && summary.deleted === 0) {
+                console.log('No function changes detected');
+                return;
+              }
+              
+              // Build comment
+              let comment = `## Code Atlas: Function Changes\n\n`;
+              comment += `### Summary\n\n`;
+              comment += `- **Added:** ${summary.added} functions\n`;
+              comment += `- **Modified:** ${summary.modified} functions\n`;
+              comment += `- **Deleted:** ${summary.deleted} functions\n\n`;
+              
+              if (summary.complexityIncreases > 0) {
+                comment += `**Warning:** ${summary.complexityIncreases} functions increased in complexity\n\n`;
+              }
+              
+              if (summary.signatureChanges > 0) {
+                comment += `**Warning:** ${summary.signatureChanges} functions changed signatures\n\n`;
+              }
+              
+              // Check for duplicates
+              const headRegistry = JSON.parse(fs.readFileSync('head-registry.json', 'utf8'));
+              if (headRegistry.duplicates && headRegistry.duplicates.length > 0) {
+                comment += `**Warning:** ${headRegistry.duplicates.length} duplicate/near-duplicate function pairs detected\n\n`;
+              }
+              
+              // Modified functions
+              if (diff.modified && diff.modified.length > 0) {
+                comment += `### Modified Functions\n\n`;
+                comment += `| Function | File | Complexity | Change |\n`;
+                comment += `|----------|------|------------|--------|\n`;
+                diff.modified.slice(0, 10).forEach(m => {
+                  const delta = m.complexityDelta > 0 ? `+${m.complexityDelta}` : m.complexityDelta < 0 ? `${m.complexityDelta}` : '0';
+                  const warning = m.complexityDelta > 5 ? ' ⚠️' : '';
+                  comment += `| \`${m.name}\` | ${m.filePath} | ${m.complexityBefore} → ${m.complexityAfter} | ${delta}${warning} |\n`;
+                });
+                if (diff.modified.length > 10) {
+                  comment += `\n*... and ${diff.modified.length - 10} more*\n`;
+                }
+                comment += `\n`;
+              }
+              
+              // Added functions
+              if (diff.added && diff.added.length > 0) {
+                comment += `### Added Functions\n\n`;
+                comment += `| Function | File | Complexity |\n`;
+                comment += `|----------|------|------------|\n`;
+                diff.added.slice(0, 10).forEach(fn => {
+                  comment += `| \`${fn.name}\` | ${fn.filePath} | ${fn.complexity} |\n`;
+                });
+                if (diff.added.length > 10) {
+                  comment += `\n*... and ${diff.added.length - 10} more*\n`;
+                }
+                comment += `\n`;
+              }
+              
+              // Duplicate details
+              if (headRegistry.duplicates && headRegistry.duplicates.length > 0) {
+                comment += `### Duplicate Functions\n\n`;
+                headRegistry.duplicates.slice(0, 5).forEach(dup => {
+                  comment += `**${dup.function1.name}** (${dup.function1.filePath}:${dup.function1.line}) ↔ **${dup.function2.name}** (${dup.function2.filePath}:${dup.function2.line})\n`;
+                  comment += `- Similarity: ${(dup.similarity * 100).toFixed(1)}%\n\n`;
+                });
+                if (headRegistry.duplicates.length > 5) {
+                  comment += `*... and ${headRegistry.duplicates.length - 5} more duplicate pairs*\n\n`;
+                }
+              }
+              
+              // Generate focused graph
+              const changedFunctions = [
+                ...diff.added.map(f => f.name),
+                ...diff.modified.map(m => m.name)
+              ];
+              
+              if (changedFunctions.length > 0 && changedFunctions.length < 30) {
+                try {
+                  const addedFunctions = diff.added.map(f => f.name).join(',');
+                  const modifiedFunctions = diff.modified.map(m => m.name).join(',');
+                  const focusFunctions = changedFunctions.join(',');
+                  
+                  let graphCmd = `code-atlas graph --format mermaid --focus "${focusFunctions}" --focus-depth 1`;
+                  if (addedFunctions) graphCmd += ` --highlight-added "${addedFunctions}"`;
+                  if (modifiedFunctions) graphCmd += ` --highlight-modified "${modifiedFunctions}"`;
+                  graphCmd += ' --output focused-graph.md';
+                  
+                  execSync(graphCmd);
+                  
+                  if (fs.existsSync('focused-graph.md')) {
+                    const graphContent = fs.readFileSync('focused-graph.md', 'utf8');
+                    comment += `### Impact Graph\n\n`;
+                    comment += `Focused view showing changed functions and their immediate dependencies:\n\n`;
+                    comment += graphContent + `\n\n`;
+                    comment += `**Legend:** 🟢 Added | 🟡 Modified | 🔵 Exported\n\n`;
+                  }
+                } catch (graphError) {
+                  console.log('Failed to generate focused graph:', graphError.message);
+                }
+              }
+              
+              comment += `\n[View detailed reports](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})\n\n`;
+              comment += `---\n`;
+              comment += `**Re-run this analysis:** Add the \`run-analysis\` label or use the [Actions tab](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/workflows/code-atlas-pr.yml) to manually trigger.\n`;
+              
+              // Post comment
+              await github.rest.issues.createComment({
+                issue_number: prNumber,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+              
+              console.log(`Posted analysis comment to PR #${prNumber}`);
+              
+            } catch (error) {
+              console.error('Error analyzing PR:', error);
+              throw error;
+            }
