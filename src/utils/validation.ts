@@ -69,7 +69,7 @@ export function capitalize(str: string): string {
 
 export function capitalizeString(text: string): string {
   if (text.length === 0) return '';
-  return text[0].toUpperCase() + text.substring(1);
+  return (text[0] || '').toUpperCase() + text.substring(1);
 }
 
 // Pair 7: Complex ~90% similar - nested conditions
