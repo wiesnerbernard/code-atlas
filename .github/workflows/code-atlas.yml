@@ -106,11 +106,15 @@ jobs:
             const fs = require('fs');
             const { execSync } = require('child_process');
             
+            console.log(`Event name: ${context.eventName}`);
+            console.log(`Ref: ${context.ref}`);
+            console.log(`Issue number: ${context.issue?.number}`);
+            
             // Get PR number - either from context or by finding PR for current branch
             let prNumber = context.issue?.number;
             
-            if (!prNumber && github.event_name === 'workflow_dispatch') {
-              // For manual runs, find PR for current branch
+            if (!prNumber) {
+              // For manual runs or label triggers, find PR for current branch
               const branch = context.ref.replace('refs/heads/', '');
               console.log(`Looking for PR for branch: ${branch}`);
               
