@@ -202,6 +202,12 @@ ${
                 comment += \`**Warning:** \${summary.signatureChanges} functions changed signatures\\n\\n\`;
               }
               
+              // Check for duplicates in the head registry
+              const headRegistry = JSON.parse(fs.readFileSync('head-registry.json', 'utf8'));
+              if (headRegistry.duplicates && headRegistry.duplicates.length > 0) {
+                comment += \`**Warning:** \${headRegistry.duplicates.length} duplicate/near-duplicate function pairs detected\\n\\n\`;
+              }
+              
               // Add top modified functions
               if (diff.modified && diff.modified.length > 0) {
                 comment += \`### Modified Functions\\n\\n\`;
@@ -216,6 +222,18 @@ ${
                   comment += \`\\n*... and \${diff.modified.length - 10} more*\\n\`;
                 }
                 comment += \`\\n\`;
+              }
+              
+              // Add duplicate detection results
+              if (headRegistry.duplicates && headRegistry.duplicates.length > 0) {
+                comment += \`### Duplicate Functions\\n\\n\`;
+                headRegistry.duplicates.slice(0, 5).forEach(dup => {
+                  comment += \`**\${dup.function1.name}** (\${dup.function1.filePath}:\${dup.function1.line}) ↔ **\${dup.function2.name}** (\${dup.function2.filePath}:\${dup.function2.line})\\n\`;
+                  comment += \`- Similarity: \${(dup.similarity * 100).toFixed(1)}%\\n\\n\`;
+                });
+                if (headRegistry.duplicates.length > 5) {
+                  comment += \`*... and \${headRegistry.duplicates.length - 5} more duplicate pairs*\\n\\n\`;
+                }
               }
 ${
   config.graphFormats.includes('mermaid')
