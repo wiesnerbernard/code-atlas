@@ -197,7 +197,7 @@ function detectCircularDependencies(nodes: Map<string, DependencyNode>): string[
 export function generateMermaidDiagram(graph: DependencyGraph, maxNodes = 50): string {
   const lines: string[] = [];
   lines.push('```mermaid');
-  lines.push('graph TD');
+  lines.push('graph LR');
 
   // Limit nodes to most connected ones
   const sortedNodes = Array.from(graph.nodes.values())
@@ -388,7 +388,7 @@ export function generateHighlightedMermaidDiagram(
 ): string {
   const lines: string[] = [];
   lines.push('```mermaid');
-  lines.push('graph TD');
+  lines.push('graph LR');
 
   const nodes = Array.from(graph.nodes.values());
 
