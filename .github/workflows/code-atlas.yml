@@ -171,6 +171,30 @@ jobs:
                 comment += `\n`;
               }
               
+              // Generate focused impact graph with changed functions highlighted
+              const changedFunctions = [
+                ...diff.added.map(f => f.name),
+                ...diff.modified.map(m => m.name)
+              ];
+              
+              if (changedFunctions.length > 0 && changedFunctions.length < 30) {
+                try {
+                  // Generate full graph first
+                  execSync('code-atlas graph --format mermaid --output full-graph.md');
+                  
+                  // For now, show the full graph - we'll enhance this later with focused subgraph
+                  if (fs.existsSync('full-graph.md')) {
+                    const graphContent = fs.readFileSync('full-graph.md', 'utf8');
+                    comment += `### Impact Graph\n\n`;
+                    comment += `Dependency graph showing changed functions and their relationships:\n\n`;
+                    comment += graphContent + `\n\n`;
+                    comment += `**Legend:** Green nodes are exported functions, changed functions are marked in the summary above.\n\n`;
+                  }
+                } catch (graphError) {
+                  console.log('Failed to generate graph:', graphError.message);
+                }
+              }
+              
               comment += `\n📦 [View detailed reports](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})\n`;
               
               // Post comment
