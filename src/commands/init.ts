@@ -90,21 +90,110 @@ ${config.graphFormats.map((fmt) => `          code-atlas graph --format ${fmt} -
 `
     : ''
 }      
-      - name: Display statistics
-        run: code-atlas stats
+      - name: Collect statistics
+        id: stats
+        run: |
+          code-atlas stats > stats.txt
+          code-atlas stats --format json > stats.json
+          cat stats.txt
+          
+          # Extract key metrics
+          TOTAL_FUNCTIONS=$(jq -r '.totalFunctions // 0' stats.json)
+          AVG_COMPLEXITY=$(jq -r '.averageComplexity // 0' stats.json)
+          echo "total_functions=$TOTAL_FUNCTIONS" >> $GITHUB_OUTPUT
+          echo "avg_complexity=$AVG_COMPLEXITY" >> $GITHUB_OUTPUT
 ${
+  config.graphFormats.includes('mermaid')
+    ? `      
+      - name: Add reports to summary
+        if: always()
+        run: |
+          echo "## 📊 Code Atlas Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat stats.txt >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f dependency-graph.md ]; then
+            echo "### Dependency Graph" >> $GITHUB_STEP_SUMMARY
+            cat dependency-graph.md >> $GITHUB_STEP_SUMMARY
+          fi
+`
+    : ''
+}${
   config.graphFormats.length > 0 || config.generateReport
     ? `      
       - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: code-atlas-reports
           path: |
 ${config.generateReport ? '            code-atlas-report.html\n' : ''}${config.graphFormats.map((fmt) => `            dependency-graph.${fmt === 'mermaid' ? 'md' : fmt}`).join('\n')}
             registry.json
+            stats.txt
+            stats.json
 `
     : ''
-}`;
+}      
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read stats
+            const stats = fs.readFileSync('stats.txt', 'utf8');
+            const statsJson = JSON.parse(fs.readFileSync('stats.json', 'utf8'));
+            
+            // Build comment
+            let comment = \`## 📊 Code Atlas Analysis\\n\\n\`;
+            comment += \`\\\`\\\`\\\`\\n\${stats}\\\`\\\`\\\`\\n\\n\`;
+            
+            // Add warnings if thresholds exceeded
+${
+  config.complexityThreshold
+    ? `            if (statsJson.averageComplexity > ${config.complexityThreshold}) {
+              comment += \`⚠️ **Warning**: Average complexity (\${statsJson.averageComplexity.toFixed(2)}) exceeds threshold (${config.complexityThreshold})\\n\\n\`;
+            }
+`
+    : ''
+}${
+  config.failOnCircularDeps
+    ? `            // Check for circular dependencies
+            if (fs.existsSync('deps.json')) {
+              const deps = JSON.parse(fs.readFileSync('deps.json', 'utf8'));
+              const circularNodes = deps.nodes.filter(n => n.circular);
+              if (circularNodes.length > 0) {
+                comment += \`🔄 **Circular Dependencies**: \${circularNodes.length} detected\\n\`;
+                comment += circularNodes.slice(0, 5).map(n => \`  - \${n.id}\`).join('\\n');
+                if (circularNodes.length > 5) comment += \`\\n  - ... and \${circularNodes.length - 5} more\`;
+                comment += \`\\n\\n\`;
+              }
+            }
+`
+    : ''
+}${
+  config.graphFormats.includes('mermaid')
+    ? `            // Add mermaid diagram
+            if (fs.existsSync('dependency-graph.md')) {
+              const diagram = fs.readFileSync('dependency-graph.md', 'utf8');
+              comment += \`### 🔗 Dependency Graph\\n\\n\`;
+              comment += diagram + \`\\n\\n\`;
+            }
+`
+    : ''
+}            
+            // Add artifact link
+            comment += \`📦 [View detailed reports in artifacts](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\`;
+            
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+`;
 
 const GITLAB_CI_TEMPLATE = (config: SetupConfig) => `code-atlas:
   stage: test

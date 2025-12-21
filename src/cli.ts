@@ -23,7 +23,7 @@ const program = new Command();
 program
   .name('code-atlas')
   .description('CLI tool to scan and index utility functions in codebases')
-  .version('0.5.0');
+  .version('0.5.1');
 
 // Init command
 program

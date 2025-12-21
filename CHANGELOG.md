@@ -5,6 +5,24 @@ All notable changes to Code-Atlas will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2025-12-21
+
+### Added
+
+#### PR Integration Features (GitHub Actions)
+- **Automatic PR Comments**: Posts analysis results directly on pull requests
+  - Statistics summary (functions, complexity, etc.)
+  - Warnings when thresholds are exceeded
+  - Circular dependency detection and listing
+  - Embedded Mermaid dependency graphs
+  - Links to detailed artifact reports
+- **GitHub Step Summary**: Displays stats and diagrams in workflow summary
+- **Enhanced Artifacts**: Now includes `stats.txt` and `stats.json` for easier consumption
+
+### Improved
+- Better visibility of code quality metrics in PRs
+- Streamlined review process with automatic reporting
+
 ## [0.5.0] - 2025-12-21
 
 ### Added
