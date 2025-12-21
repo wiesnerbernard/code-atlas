@@ -16,7 +16,7 @@ const DEFAULT_PATTERNS = ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'];
 
 /**
  * Default ignore patterns
- * 
+ *
  * These patterns are ALWAYS applied and cannot be overridden.
  * This ensures node_modules, build outputs, and other non-source
  * directories are never scanned.

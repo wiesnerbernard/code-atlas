@@ -50,8 +50,7 @@ export async function statsCommand(options: StatsOptions = {}): Promise<void> {
     // Calculate average complexity
     const avgComplexity =
       registry.functions.length > 0
-        ? registry.functions.reduce((sum, f) => sum + f.complexity, 0) /
-          registry.functions.length
+        ? registry.functions.reduce((sum, f) => sum + f.complexity, 0) / registry.functions.length
         : 0;
 
     if (format === 'json') {
@@ -81,10 +80,7 @@ export async function statsCommand(options: StatsOptions = {}): Promise<void> {
 
     // Overview stats
     console.log(chalk.blue('Registry Version:'), registry.version);
-    console.log(
-      chalk.blue('Generated:'),
-      new Date(registry.generatedAt).toLocaleString(),
-    );
+    console.log(chalk.blue('Generated:'), new Date(registry.generatedAt).toLocaleString());
     console.log(chalk.blue('Scanned Paths:'), registry.scannedPaths.join(', '));
     console.log(chalk.blue('Total Files:'), registry.totalFiles);
     console.log(chalk.blue('Total Functions:'), registry.totalFunctions);
@@ -92,9 +88,7 @@ export async function statsCommand(options: StatsOptions = {}): Promise<void> {
 
     // Duplicates
     if (registry.duplicates.length > 0) {
-      console.log(
-        chalk.yellow(`\n⚠️  Duplicate Groups: ${registry.duplicates.length}\n`),
-      );
+      console.log(chalk.yellow(`\n⚠️  Duplicate Groups: ${registry.duplicates.length}\n`));
 
       const table = new Table({
         head: ['Functions', 'Locations', 'Similarity'],
@@ -103,15 +97,9 @@ export async function statsCommand(options: StatsOptions = {}): Promise<void> {
 
       for (const group of registry.duplicates) {
         const names = group.functions.map((f) => f.name).join(', ');
-        const locations = group.functions
-          .map((f) => `${f.filePath}:${f.line}`)
-          .join('\n');
+        const locations = group.functions.map((f) => `${f.filePath}:${f.line}`).join('\n');
 
-        table.push([
-          names,
-          locations,
-          `${(group.similarity * 100).toFixed(0)}%`,
-        ]);
+        table.push([names, locations, `${(group.similarity * 100).toFixed(0)}%`]);
       }
 
       console.log(table.toString());
@@ -133,11 +121,7 @@ export async function statsCommand(options: StatsOptions = {}): Promise<void> {
       });
 
       for (const func of topComplex) {
-        complexTable.push([
-          func.name,
-          `${func.filePath}:${func.line}`,
-          func.complexity.toString(),
-        ]);
+        complexTable.push([func.name, `${func.filePath}:${func.line}`, func.complexity.toString()]);
       }
 
       console.log(complexTable.toString());

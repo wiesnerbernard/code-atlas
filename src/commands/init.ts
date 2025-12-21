@@ -21,7 +21,7 @@ interface SetupConfig {
   customIgnorePatterns: string[];
 }
 
-const GITHUB_ACTIONS_TEMPLATE = (config: SetupConfig) => `name: Code Atlas Analysis
+const GITHUB_ACTIONS_TEMPLATE = (config: SetupConfig): string => `name: Code Atlas Analysis
 
 on:
   push:
@@ -195,7 +195,7 @@ ${
             });
 `;
 
-const GITLAB_CI_TEMPLATE = (config: SetupConfig) => `code-atlas:
+const GITLAB_CI_TEMPLATE = (config: SetupConfig): string => `code-atlas:
   stage: test
   image: node:20
   
@@ -236,7 +236,7 @@ ${config.generateReport ? '      - code-atlas-report.html\n' : ''}${config.graph
     expire_in: 30 days
 `;
 
-const CIRCLECI_TEMPLATE = (config: SetupConfig) => `version: 2.1
+const CIRCLECI_TEMPLATE = (config: SetupConfig): string => `version: 2.1
 
 jobs:
   analyze:
@@ -318,7 +318,7 @@ workflows:
       - analyze
 `;
 
-const CONFIG_TEMPLATE = (config: SetupConfig) => `{
+const CONFIG_TEMPLATE = (config: SetupConfig): string => `{
   "include": ["./src"],
   "ignore": [
     "node_modules",
@@ -466,7 +466,7 @@ export async function initCommand(): Promise<void> {
             });
             if (append) {
               const existing = await import('fs').then((fs) =>
-                fs.promises.readFile(ciPath, 'utf-8'),
+                fs.promises.readFile(ciPath, 'utf-8')
               );
               ciContent = existing + '\n\n' + ciContent;
             }
@@ -512,11 +512,9 @@ export async function initCommand(): Promise<void> {
 
     if (existsSync(gitignorePath)) {
       const gitignoreContent = await import('fs').then((fs) =>
-        fs.promises.readFile(gitignorePath, 'utf-8'),
+        fs.promises.readFile(gitignorePath, 'utf-8')
       );
-      const missing = gitignoreEntries.filter(
-        (entry) => !gitignoreContent.includes(entry),
-      );
+      const missing = gitignoreEntries.filter((entry) => !gitignoreContent.includes(entry));
 
       if (missing.length > 0) {
         const update = await confirm({
@@ -526,10 +524,7 @@ export async function initCommand(): Promise<void> {
 
         if (update) {
           const updated =
-            gitignoreContent +
-            '\n\n# Code-Atlas outputs\n' +
-            missing.join('\n') +
-            '\n';
+            gitignoreContent + '\n\n# Code-Atlas outputs\n' + missing.join('\n') + '\n';
           await writeFile(gitignorePath, updated);
           logger.success('Updated .gitignore');
         }
@@ -543,7 +538,7 @@ export async function initCommand(): Promise<void> {
       if (create) {
         await writeFile(
           gitignorePath,
-          '# Code-Atlas outputs\n' + gitignoreEntries.join('\n') + '\n',
+          '# Code-Atlas outputs\n' + gitignoreEntries.join('\n') + '\n'
         );
         logger.success('Created .gitignore');
       }
@@ -552,7 +547,11 @@ export async function initCommand(): Promise<void> {
     // Success message
     console.log(chalk.bold.green('\n✓ Setup complete!\n'));
     console.log(chalk.bold('Next steps:'));
-    console.log(chalk.gray('  1. Run') + chalk.cyan(' code-atlas scan') + chalk.gray(' to analyze your codebase'));
+    console.log(
+      chalk.gray('  1. Run') +
+        chalk.cyan(' code-atlas scan') +
+        chalk.gray(' to analyze your codebase')
+    );
     console.log(chalk.gray('  2. Review generated files and commit them'));
     if (ciPlatform !== 'none') {
       console.log(chalk.gray('  3. Push to trigger CI pipeline'));
