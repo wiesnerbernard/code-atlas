@@ -28,6 +28,8 @@ on:
   push:
     branches: [main, develop]
   pull_request:
+    types: [opened, reopened, labeled]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -36,6 +38,13 @@ permissions:
 
 jobs:
   analyze:
+    # Only run on: manual trigger, PR open/reopen, or when 'run-analysis' label is added
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event.action == 'opened' ||
+      github.event.action == 'reopened' ||
+      contains(github.event.pull_request.labels.*.name, 'run-analysis')
     runs-on: ubuntu-latest
     
     steps:
@@ -235,7 +244,9 @@ ${
 `
     : ''
 }              
-              comment += \`\\n📦 [View detailed reports](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\`;
+              comment += \`\\n📦 [View detailed reports](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\\n\`;
+              comment += \`---\\n\`;
+              comment += \`💡 **Re-run this analysis:** Add the \\\`run-analysis\\\` label or use the [Actions tab](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/workflows/code-atlas.yml) to manually trigger.\\n\`;
               
               // Post comment
               await github.rest.issues.createComment({
@@ -296,7 +307,9 @@ ${
 `
           : ''
       }            
-            comment += \`📦 [View detailed reports](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\`;
+            comment += \`📦 [View detailed reports](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID})\\n\\n\`;
+            comment += \`---\\n\`;
+            comment += \`💡 **Re-run this analysis:** Add the \\\`run-analysis\\\` label or use the [Actions tab](\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/workflows/code-atlas.yml) to manually trigger.\\n\`;
             
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
