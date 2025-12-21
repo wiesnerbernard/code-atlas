@@ -11,6 +11,8 @@ import {
   buildDependencyGraph,
   generateMermaidDiagram,
   generateDOTGraph,
+  buildImpactSubgraph,
+  generateHighlightedMermaidDiagram,
 } from '../core/dependencies.js';
 import { logger } from '../utils/logger.js';
 
@@ -25,6 +27,14 @@ export interface GraphOptions {
   showOrphans?: boolean;
   /** Show circular dependencies */
   showCircular?: boolean;
+  /** Focus on specific functions (comma-separated) */
+  focus?: string;
+  /** Depth for focused graph (default: 1) */
+  focusDepth?: number;
+  /** Highlight added functions (comma-separated) */
+  highlightAdded?: string;
+  /** Highlight modified functions (comma-separated) */
+  highlightModified?: string;
 }
 
 /**
@@ -77,6 +87,17 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
     // Build dependency graph
     const graph = buildDependencyGraph(registry.functions, sourceFiles);
 
+    // Check if we need to generate a focused subgraph
+    let finalGraph = graph;
+    if (options.focus) {
+      const focusFunctions = options.focus.split(',').map((f) => f.trim());
+      const depth = options.focusDepth || 1;
+      finalGraph = buildImpactSubgraph(graph, focusFunctions, depth);
+      logger.info(
+        `Generated focused subgraph with ${finalGraph.nodes.size} nodes (depth: ${depth})`
+      );
+    }
+
     // Generate output
     const format = options.format || 'mermaid';
     const maxNodes = options.maxNodes || 50;
@@ -86,28 +107,41 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
 
     switch (format) {
       case 'mermaid':
-        content = generateMermaidDiagram(graph, maxNodes);
+        // Use highlighted diagram if we have added/modified functions
+        if (options.highlightAdded || options.highlightModified) {
+          const addedSet = new Set(
+            options.highlightAdded ? options.highlightAdded.split(',').map((f) => f.trim()) : []
+          );
+          const modifiedSet = new Set(
+            options.highlightModified
+              ? options.highlightModified.split(',').map((f) => f.trim())
+              : []
+          );
+          content = generateHighlightedMermaidDiagram(finalGraph, modifiedSet, addedSet);
+        } else {
+          content = generateMermaidDiagram(finalGraph, maxNodes);
+        }
         defaultOutput = './DEPENDENCIES.md';
         break;
       case 'dot':
-        content = generateDOTGraph(graph, maxNodes);
+        content = generateDOTGraph(finalGraph, maxNodes);
         defaultOutput = './dependencies.dot';
         break;
       case 'json':
         content = JSON.stringify(
           {
-            orphans: graph.orphans.map((n) => ({
+            orphans: finalGraph.orphans.map((n) => ({
               name: n.function.name,
               file: n.function.filePath,
               line: n.function.line,
             })),
-            circularDependencies: graph.circularDependencies,
-            entryPoints: graph.entryPoints.map((n) => ({
+            circularDependencies: finalGraph.circularDependencies,
+            entryPoints: finalGraph.entryPoints.map((n) => ({
               name: n.function.name,
               file: n.function.filePath,
             })),
             stats: {
-              totalFunctions: graph.nodes.size,
+              totalFunctions: finalGraph.nodes.size,
               orphanedFunctions: graph.orphans.length,
               circularDependencies: graph.circularDependencies.length,
               entryPoints: graph.entryPoints.length,

@@ -169,6 +169,10 @@ program
   .option('--max-nodes <number>', 'Maximum nodes to include in graph', parseInt, 50)
   .option('--show-orphans', 'Show orphaned functions details', false)
   .option('--show-circular', 'Show circular dependencies details', false)
+  .option('--focus <functions>', 'Focus on specific functions (comma-separated)')
+  .option('--focus-depth <depth>', 'Depth for focused graph', parseInt, 1)
+  .option('--highlight-added <functions>', 'Highlight added functions (comma-separated)')
+  .option('--highlight-modified <functions>', 'Highlight modified functions (comma-separated)')
   .action(async (options) => {
     try {
       await graphCommand({
@@ -177,6 +181,10 @@ program
         maxNodes: options.maxNodes,
         showOrphans: options.showOrphans,
         showCircular: options.showCircular,
+        focus: options.focus,
+        focusDepth: options.focusDepth,
+        highlightAdded: options.highlightAdded,
+        highlightModified: options.highlightModified,
       });
     } catch (error) {
       logger.error('Graph command failed');

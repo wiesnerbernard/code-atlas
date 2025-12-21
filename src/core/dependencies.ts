@@ -421,9 +421,9 @@ export function generateHighlightedMermaidDiagram(
 
   // Add styling
   lines.push('');
-  lines.push('  classDef added fill:#9f9,stroke:#060,stroke-width:2px');
-  lines.push('  classDef modified fill:#ff9,stroke:#f90,stroke-width:2px');
-  lines.push('  classDef exported fill:#9ff,stroke:#069,stroke-width:1px');
+  lines.push('  classDef added fill:#4ade80,stroke:#16a34a,stroke-width:3px,color:#000');
+  lines.push('  classDef modified fill:#fbbf24,stroke:#f59e0b,stroke-width:3px,color:#000');
+  lines.push('  classDef exported fill:#60a5fa,stroke:#3b82f6,stroke-width:2px,color:#000');
   lines.push('```');
 
   return lines.join('\n');
