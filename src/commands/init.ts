@@ -28,6 +28,11 @@ on:
     branches: [main, develop]
   pull_request:
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   analyze:
     runs-on: ubuntu-latest
